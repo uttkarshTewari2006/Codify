@@ -24,3 +24,15 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+input {
+  color: #111827; /* gray-900 */
+  background-color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  input {
+    color: #f9fafb; /* gray-50 */
+    background-color: #1f2937; /* gray-800 */
+  }
+}

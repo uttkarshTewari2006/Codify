@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from auth import get_user_id
 
 app = FastAPI()
 
@@ -14,12 +16,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Your first endpoint
+
 @app.get("/")
 def read_root():
     return {"message": "Roadmap API is alive!"}
 
-# A slightly useful endpoint
+
+@app.get("/me")
+def get_me(user_id: str = Depends(get_user_id)):
+    """Protected: returns current user id from JWT. Requires Authorization: Bearer <token>."""
+    return {"user_id": user_id}
+
+
 @app.get("/tracks")
 def get_tracks():
     # Hardcoded for now - we'll add database later

@@ -2,11 +2,14 @@ import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 /**
- * NextAuth config — JWT-only (Option B). No database adapter.
+ * NextAuth config — JWT-only (Option B).
  * JWT payload includes user_id so FastAPI can trust the token.
  */
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -24,13 +27,22 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // MVP: optional. Wire to your backend later for real email/password check.
-        if (!credentials?.email) return null;
-        // For now, allow any email + password (replace with FastAPI call).
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+
+        if (!user) return null;
+
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+
+        if (!isValid) return null;
+
         return {
-          id: `email-${credentials.email}`,
-          email: credentials.email,
-          name: credentials.email.split("@")[0],
+          id: user.id,
+          email: user.email,
+          name: user.name || user.email.split("@")[0],
         };
       },
     }),
@@ -54,6 +66,9 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+  },
+  pages: {
+    signIn: "/signin",
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

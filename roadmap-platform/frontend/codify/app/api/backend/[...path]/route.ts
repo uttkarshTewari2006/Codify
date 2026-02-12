@@ -61,12 +61,16 @@ async function proxyWithAuth(
 
   let authHeader: string | undefined;
   if (token?.user_id && JWT_SECRET.length) {
-    const jwt = await new SignJWT({ user_id: token.user_id })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("1h")
-      .sign(JWT_SECRET);
-    authHeader = `Bearer ${jwt}`;
+    try {
+      const jwt = await new SignJWT({ user_id: token.user_id })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("1h")
+        .sign(JWT_SECRET);
+      authHeader = `Bearer ${jwt}`;
+    } catch (e) {
+      console.error("[Proxy] JWT Signing Error:", e);
+    }
   }
 
   const headers: HeadersInit = {
@@ -84,10 +88,15 @@ async function proxyWithAuth(
     }
   }
 
-  const res = await fetch(url, init);
-  const data = await res.text();
-  return new NextResponse(data, {
-    status: res.status,
-    headers: { "Content-Type": res.headers.get("Content-Type") ?? "application/json" },
-  });
+  try {
+    const res = await fetch(url, init);
+    const data = await res.text();
+    return new NextResponse(data, {
+      status: res.status,
+      headers: { "Content-Type": res.headers.get("Content-Type") ?? "application/json" },
+    });
+  } catch (error) {
+    console.error("[Proxy] Fetch Error:", error);
+    return new NextResponse(JSON.stringify({ error: "Backend unavailable" }), { status: 502 });
+  }
 }
