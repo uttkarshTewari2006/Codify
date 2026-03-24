@@ -9,7 +9,13 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-JWT_SECRET = os.environ.get("JWT_SECRET", "")
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def get_jwt_secret():
+    return os.environ.get("JWT_SECRET", "")
+
 ALGORITHM = "HS256"
 
 security = HTTPBearer(auto_error=False)
@@ -18,21 +24,25 @@ security = HTTPBearer(auto_error=False)
 def get_user_id(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> str:
-    if not JWT_SECRET:
+    secret = get_jwt_secret()
+    if not secret:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="JWT_SECRET not configured",
         )
+    
     if not credentials or not credentials.credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing or invalid authorization header",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
     try:
+        token = credentials.credentials
         payload = jwt.decode(
-            credentials.credentials,
-            JWT_SECRET,
+            token,
+            secret,
             algorithms=[ALGORITHM],
         )
         user_id = payload.get("user_id")
@@ -52,18 +62,24 @@ def get_user_id(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
         )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Auth error: {e}"
+        )
 
 
 def get_user_id_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> Optional[str]:
     """Use for routes that work with or without auth."""
-    if not credentials or not credentials.credentials or not JWT_SECRET:
+    secret = get_jwt_secret()
+    if not credentials or not credentials.credentials or not secret:
         return None
     try:
         payload = jwt.decode(
             credentials.credentials,
-            JWT_SECRET,
+            secret,
             algorithms=[ALGORITHM],
         )
         return str(payload.get("user_id") or "")
