@@ -7,8 +7,9 @@ from dotenv import load_dotenv
 # Load environment variables early
 load_dotenv()
 
+from datetime import datetime
 from auth import get_user_id
-from database import engine, Roadmap, Task, User, get_session
+from database import engine, Roadmap, Task, User, Deadline, get_session
 from generator import generate_roadmap_tasks, regenerate_roadmap_tasks
 import json
 
@@ -77,8 +78,8 @@ def generate_plan(
                 duration=t['duration'],
                 type=t['type'],
                 order=t['order'],
-                deliverables=json.dumps(t.get('deliverables', [])),
-                links=json.dumps(t.get('links', [])),
+                deliverables=t.get('deliverables', []),
+                links=t.get('links', []),
                 roadmapId=roadmap_id
             )
             session.add(task)
@@ -126,8 +127,8 @@ def regenerate_plan(
                 duration=t['duration'],
                 type=t['type'],
                 order=t['order'],
-                deliverables=json.dumps(t.get('deliverables', [])),
-                links=json.dumps(t.get('links', [])),
+                deliverables=t.get('deliverables', []),
+                links=t.get('links', []),
                 roadmapId=roadmap_id
             )
             session.add(task)
@@ -204,6 +205,148 @@ def get_tracks():
         {"id": 2, "name": "Project Building", "icon": "rocket"},
         {"id": 3, "name": "System Design", "icon": "layout"},
     ]
+
+@app.get("/curated-roadmaps")
+def get_curated_roadmaps():
+    """Returns the pre-curated roadmaps from seed data."""
+    import os
+    seed_path = os.path.join(os.path.dirname(__file__), "seed_data", "curated_roadmaps_enhanced.json")
+    try:
+        with open(seed_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data
+    except Exception as e:
+        print(f"Error loading curated roadmaps: {e}")
+        raise HTTPException(status_code=500, detail="Could not load curated roadmaps")
+
+@app.post("/roadmaps/fork-curated")
+def fork_curated_roadmap(
+    payload: dict,
+    user_id: str = Depends(get_user_id),
+    session: Session = Depends(get_session)
+):
+    """Forks a curated roadmap into the user's personal roadmaps."""
+    roadmap_data = payload.get("roadmap")
+    if not roadmap_data:
+        raise HTTPException(status_code=400, detail="Roadmap data missing")
+
+    try:
+        new_roadmap_id = str(uuid.uuid4())
+        new_roadmap = Roadmap(
+            id=new_roadmap_id,
+            title=roadmap_data["roadmap_title"],
+            description=roadmap_data.get("description", ""),
+            userId=user_id
+        )
+        session.add(new_roadmap)
+
+        for i, t in enumerate(roadmap_data.get("tasks", [])):
+            new_task = Task(
+                id=str(uuid.uuid4()),
+                title=t["title"],
+                description=t.get("description", ""),
+                duration=t.get("duration", ""),
+                type=t.get("type", "info"),
+                order=i,
+                deliverables=t.get("deliverables", []),
+                links=t.get("links", []),
+                roadmapId=new_roadmap_id
+            )
+            session.add(new_task)
+        
+        session.commit()
+        session.refresh(new_roadmap)
+        return new_roadmap
+    except Exception as e:
+        print(f"Error forking roadmap: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fork roadmap")
+
+# --- Deadline CRUD ---
+
+@app.get("/deadlines")
+def get_deadlines(
+    user_id: str = Depends(get_user_id),
+    session: Session = Depends(get_session)
+):
+    try:
+        deadlines = session.exec(select(Deadline).where(Deadline.userId == user_id)).all()
+        return deadlines
+    except Exception as e:
+        print(f"Error fetching deadlines: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/deadlines")
+def create_deadline(
+    deadline_data: dict,
+    user_id: str = Depends(get_user_id),
+    session: Session = Depends(get_session)
+):
+    try:
+        new_id = str(uuid.uuid4())
+        # Convert targetDate string to datetime
+        target_date = datetime.fromisoformat(deadline_data["targetDate"].replace('Z', '+00:00'))
+        
+        deadline = Deadline(
+            id=new_id,
+            title=deadline_data["title"],
+            description=deadline_data.get("description"),
+            targetDate=target_date,
+            type=deadline_data.get("type", "general"),
+            roadmapId=deadline_data.get("roadmapId"),
+            taskId=deadline_data.get("taskId"),
+            deliverableId=deadline_data.get("deliverableId"),
+            userId=user_id
+        )
+        session.add(deadline)
+        session.commit()
+        session.refresh(deadline)
+        return deadline
+    except Exception as e:
+        print(f"Error creating deadline: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create deadline")
+
+@app.patch("/deadlines/{deadline_id}")
+def update_deadline(
+    deadline_id: str,
+    deadline_data: dict,
+    user_id: str = Depends(get_user_id),
+    session: Session = Depends(get_session)
+):
+    deadline = session.exec(select(Deadline).where(Deadline.id == deadline_id, Deadline.userId == user_id)).first()
+    if not deadline:
+        raise HTTPException(status_code=404, detail="Deadline not found")
+    
+    try:
+        if "title" in deadline_data:
+            deadline.title = deadline_data["title"]
+        if "description" in deadline_data:
+            deadline.description = deadline_data["description"]
+        if "targetDate" in deadline_data:
+            deadline.targetDate = datetime.fromisoformat(deadline_data["targetDate"].replace('Z', '+00:00'))
+        if "status" in deadline_data:
+            deadline.status = deadline_data["status"]
+            
+        session.add(deadline)
+        session.commit()
+        session.refresh(deadline)
+        return deadline
+    except Exception as e:
+        print(f"Error updating deadline: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update deadline")
+
+@app.delete("/deadlines/{deadline_id}")
+def delete_deadline(
+    deadline_id: str,
+    user_id: str = Depends(get_user_id),
+    session: Session = Depends(get_session)
+):
+    deadline = session.exec(select(Deadline).where(Deadline.id == deadline_id, Deadline.userId == user_id)).first()
+    if not deadline:
+        raise HTTPException(status_code=404, detail="Deadline not found")
+        
+    session.delete(deadline)
+    session.commit()
+    return {"message": "Deadline deleted"}
 
 # --- Roadmap & Task CRUD ---
 

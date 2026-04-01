@@ -1,0 +1,555 @@
+{
+  "curated_roadmaps": [
+    {
+      "roadmap_title": "NeetCode 150",
+      "category": "Interview Prep",
+      "description": "Canonical NeetCode 150 practice roadmap covering core DS&A patterns. Each task links to the corresponding NeetCode practice sections and relevant problem sets.",
+      "tasks": [
+        {
+          "title": "Arrays & Hashing Fundamentals",
+          "description": "Master array manipulation, frequency counting, and hash maps.",
+          "duration": "1 week",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Contains Duplicate",
+              false
+            ],
+            [
+              "Valid Anagram",
+              false
+            ],
+            [
+              "Two Sum",
+              false
+            ],
+            [
+              "Group Anagrams",
+              false
+            ],
+            [
+              "Top K Frequent Elements",
+              false
+            ],
+            [
+              "Product of Array Except Self",
+              false
+            ],
+            [
+              "Valid Sudoku",
+              false
+            ]
+          ],
+          "links": [
+            "https://neetcode.io/practice",
+            "https://neetcode.io/practice/problem/contains-duplicate",
+            "https://neetcode.io/practice/problem/valid-anagram",
+            "https://neetcode.io/practice/problem/two-sum",
+            "https://neetcode.io/practice/problem/group-anagrams",
+            "https://neetcode.io/practice/problem/top-k-frequent-elements",
+            "https://neetcode.io/practice/problem/product-of-array-except-self",
+            "https://neetcode.io/practice/problem/valid-sudoku"
+          ]
+        },
+        {
+          "title": "Two Pointers Strategy",
+          "description": "Learn to reduce quadratic scans with two-pointer techniques.",
+          "duration": "1 week",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Valid Palindrome",
+              false
+            ],
+            [
+              "Two Sum II - Input Array Is Sorted",
+              false
+            ],
+            [
+              "3Sum",
+              false
+            ],
+            [
+              "Container With Most Water",
+              false
+            ],
+            [
+              "Trapping Rain Water",
+              false
+            ]
+          ],
+          "links": [
+            "https://neetcode.io/practice",
+            "https://neetcode.io/practice/problem/valid-palindrome",
+            "https://neetcode.io/practice/problem/two-sum-ii-input-array-is-sorted",
+            "https://neetcode.io/practice/problem/3sum",
+            "https://neetcode.io/practice/problem/container-with-most-water",
+            "https://neetcode.io/practice/problem/trapping-rain-water"
+          ]
+        },
+        {
+          "title": "Sliding Window Pattern",
+          "description": "Use fixed and variable windows for substring and subarray problems.",
+          "duration": "1 week",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Best Time to Buy and Sell Stock",
+              false
+            ],
+            [
+              "Longest Substring Without Repeating Characters",
+              false
+            ],
+            [
+              "Longest Repeating Character Replacement",
+              false
+            ],
+            [
+              "Minimum Window Substring",
+              false
+            ],
+            [
+              "Permutation in String",
+              false
+            ]
+          ],
+          "links": [
+            "https://neetcode.io/practice",
+            "https://neetcode.io/practice/problem/best-time-to-buy-and-sell-stock",
+            "https://neetcode.io/practice/problem/longest-substring-without-repeating-characters",
+            "https://neetcode.io/practice/problem/longest-repeating-character-replacement",
+            "https://neetcode.io/practice/problem/minimum-window-substring",
+            "https://neetcode.io/practice/problem/permutation-in-string"
+          ]
+        },
+        {
+          "title": "Stack",
+          "description": "Recognize when last-in-first-out structure simplifies parsing and monotonic logic.",
+          "duration": "1 week",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Valid Parentheses",
+              false
+            ],
+            [
+              "Min Stack",
+              false
+            ],
+            [
+              "Evaluate Reverse Polish Notation",
+              false
+            ],
+            [
+              "Generate Parentheses",
+              false
+            ],
+            [
+              "Daily Temperatures",
+              false
+            ]
+          ],
+          "links": [
+            "https://neetcode.io/practice",
+            "https://neetcode.io/practice/problem/valid-parentheses",
+            "https://neetcode.io/practice/problem/min-stack",
+            "https://neetcode.io/practice/problem/evaluate-reverse-polish-notation",
+            "https://neetcode.io/practice/problem/generate-parentheses",
+            "https://neetcode.io/practice/problem/daily-temperatures"
+          ]
+        },
+        {
+          "title": "Binary Search",
+          "description": "Search sorted space by halving the search interval.",
+          "duration": "1 week",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Binary Search",
+              false
+            ],
+            [
+              "Search a 2D Matrix",
+              false
+            ],
+            [
+              "Koko Eating Bananas",
+              false
+            ],
+            [
+              "Find Minimum in Rotated Sorted Array",
+              false
+            ],
+            [
+              "Search in Rotated Sorted Array",
+              false
+            ]
+          ],
+          "links": [
+            "https://neetcode.io/practice",
+            "https://neetcode.io/practice/problem/binary-search",
+            "https://neetcode.io/practice/problem/search-a-2d-matrix",
+            "https://neetcode.io/practice/problem/koko-eating-bananas",
+            "https://neetcode.io/practice/problem/find-minimum-in-rotated-sorted-array",
+            "https://neetcode.io/practice/problem/search-in-rotated-sorted-array"
+          ]
+        }
+      ]
+    },
+    {
+      "roadmap_title": "Data Science 75",
+      "category": "Interview Prep",
+      "description": "Expanded SQL and Python interview practice roadmap modeled on StrataScratch-style problems.",
+      "tasks": [
+        {
+          "title": "Fundamental SQL Queries",
+          "description": "Practice SELECT, WHERE, GROUP BY, HAVING, and basic aggregations.",
+          "duration": "1 week",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Salaries Differences",
+              false
+            ],
+            [
+              "Finding Updated Records",
+              false
+            ],
+            [
+              "Order Details",
+              false
+            ],
+            [
+              "Average Salaries",
+              false
+            ],
+            [
+              "Classify Business Type",
+              false
+            ],
+            [
+              "Counting Users per Day",
+              false
+            ]
+          ],
+          "links": [
+            "https://www.stratascratch.com/blog/basic-sql-interview-questions",
+            "https://www.stratascratch.com/blog/top-30-sql-query-interview-questions",
+            "https://platform.stratascratch.com/coding/10308-salaries-differences",
+            "https://platform.stratascratch.com/coding/10173-finding-updated-records",
+            "https://platform.stratascratch.com/coding/10299-order-details",
+            "https://platform.stratascratch.com/coding/10177-average-salaries"
+          ]
+        },
+        {
+          "title": "Advanced SQL Joins & Window Functions",
+          "description": "Combine data across tables and use window functions for ranking and analytics.",
+          "duration": "2 weeks",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Highest Energy Consumption",
+              false
+            ],
+            [
+              "Finding User Purchases",
+              false
+            ],
+            [
+              "Ranking Most Active Guests",
+              false
+            ],
+            [
+              "Top 5 States With 5 Star Businesses",
+              false
+            ],
+            [
+              "Second Highest Salary",
+              false
+            ],
+            [
+              "Department Top Three Salaries",
+              false
+            ],
+            [
+              "Nth Highest Salary",
+              false
+            ]
+          ],
+          "links": [
+            "https://www.stratascratch.com/blog/advanced-sql-interview-questions-you-must-know-how-to-answer",
+            "https://www.stratascratch.com/blog/sql-interview-questions-you-must-prepare-the-ultimate-guide",
+            "https://platform.stratascratch.com/coding/10361-highest-energy-consumption",
+            "https://platform.stratascratch.com/coding/10339-finding-user-purchases",
+            "https://platform.stratascratch.com/coding/10351-ranking-most-active-guests",
+            "https://platform.stratascratch.com/coding/10285-top-5-states-with-5-star-businesses",
+            "https://platform.stratascratch.com/coding/10156-second-highest-salary"
+          ]
+        },
+        {
+          "title": "Python Data Manipulation (Pandas)",
+          "description": "Translate SQL workflows into Python DataFrames and apply aggregation patterns.",
+          "duration": "1 week",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Workers With The Highest Salaries",
+              false
+            ],
+            [
+              "Users By Average Session Time",
+              false
+            ],
+            [
+              "Highest Salary in Department",
+              false
+            ],
+            [
+              "Average Review Ratings",
+              false
+            ]
+          ],
+          "links": [
+            "https://platform.stratascratch.com/coding/10302-workers-with-the-highest-salaries",
+            "https://platform.stratascratch.com/coding/10352-users-by-average-session-time",
+            "https://platform.stratascratch.com/coding/10310-highest-salary-in-department",
+            "https://platform.stratascratch.com/coding/10312-average-review-ratings"
+          ]
+        }
+      ]
+    },
+    {
+      "roadmap_title": "System Design Interviews",
+      "category": "Interview Prep",
+      "description": "Foundational and applied system design topics using ByteByteGo-style learning materials.",
+      "tasks": [
+        {
+          "title": "Scale from Zero to Millions of Users",
+          "description": "Learn load balancing, caching, replicas, stateless services, and horizontal scaling.",
+          "duration": "1 week",
+          "type": "conceptual",
+          "deliverables": [
+            [
+              "Draw a basic architecture diagram scaling from a single server to stateless app servers plus DB replicas",
+              false
+            ],
+            [
+              "Explain CDN usage and caching strategies",
+              false
+            ],
+            [
+              "Compare load balancer types and caching layers",
+              false
+            ]
+          ],
+          "links": [
+            "https://bytebytego.com/guides/system-design-cheat-sheet/",
+            "https://bytebytego.com/guides/system-design-blueprint-the-ultimate-guide/",
+            "https://bytebytego.com/courses/system-design-interview/scale-from-zero-to-millions-of-users"
+          ]
+        },
+        {
+          "title": "Design a Key-Value Store",
+          "description": "Cover consistent hashing, replication, CAP, and conflict resolution.",
+          "duration": "1.5 weeks",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Design the API for a distributed KV store",
+              false
+            ],
+            [
+              "Implement consistent hashing mentally or on paper",
+              false
+            ],
+            [
+              "Resolve read/write conflicts using vector clocks",
+              false
+            ]
+          ],
+          "links": [
+            "https://bytebytego.com/guides/system-design-cheat-sheet/",
+            "https://bytebytego.com/courses/system-design-interview"
+          ]
+        },
+        {
+          "title": "Design a Video Streaming System",
+          "description": "Architect upload, encoding, storage, and edge delivery for a streaming platform.",
+          "duration": "1.5 weeks",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Draft block diagram for video uploading and encoding flow",
+              false
+            ],
+            [
+              "Draft edge server delivery mapping",
+              false
+            ],
+            [
+              "Define metadata database schema",
+              false
+            ]
+          ],
+          "links": [
+            "https://bytebytego.com/courses/system-design-interview/design-youtube",
+            "https://bytebytego.com/courses/system-design-interview",
+            "https://bytebytego.com/guides/system-design-cheat-sheet/"
+          ]
+        }
+      ]
+    },
+    {
+      "roadmap_title": "ML Theory Interviews",
+      "category": "Interview Prep",
+      "description": "Core machine learning theory and math with high-quality reference material.",
+      "tasks": [
+        {
+          "title": "Linear & Logistic Regression",
+          "description": "Review loss functions, gradient descent, and L1/L2 regularization.",
+          "duration": "3 days",
+          "type": "conceptual",
+          "deliverables": [
+            [
+              "Derive the gradient of MSE loss",
+              false
+            ],
+            [
+              "Explain differences between Ridge and Lasso regularization",
+              false
+            ],
+            [
+              "Explain logistic loss and decision boundaries",
+              false
+            ]
+          ],
+          "links": [
+            "https://www.geeksforgeeks.org/machine-learning/ml-linear-regression/",
+            "https://www.geeksforgeeks.org/machine-learning/what-is-gradient-descent/",
+            "https://developers.google.com/machine-learning/crash-course/linear-regression/gradient-descent"
+          ]
+        },
+        {
+          "title": "Tree-based Models",
+          "description": "Understand decision trees, random forests, bagging, boosting, and XGBoost.",
+          "duration": "4 days",
+          "type": "conceptual",
+          "deliverables": [
+            [
+              "Explain Information Gain and Gini Impurity",
+              false
+            ],
+            [
+              "Compare Bagging vs Boosting concepts and tradeoffs",
+              false
+            ],
+            [
+              "Describe random forest variance reduction",
+              false
+            ]
+          ],
+          "links": [
+            "https://www.geeksforgeeks.org/machine-learning/decision-tree-introduction-example/",
+            "https://www.geeksforgeeks.org/machine-learning/random-forest-regression-in-python/"
+          ]
+        },
+        {
+          "title": "Neural Networks & Backpropagation",
+          "description": "Master activations, backpropagation, and vanishing gradients.",
+          "duration": "1 week",
+          "type": "conceptual",
+          "deliverables": [
+            [
+              "Manually compute a backpropagation step for a simple 2-layer network",
+              false
+            ],
+            [
+              "Explain why ReLU helps with vanishing gradients",
+              false
+            ],
+            [
+              "Compare sigmoid, tanh, and ReLU",
+              false
+            ]
+          ],
+          "links": [
+            "https://www.geeksforgeeks.org/machine-learning/introduction-to-artificial-neural-network/",
+            "https://www.geeksforgeeks.org/machine-learning/vanishing-gradient-problem/"
+          ]
+        }
+      ]
+    },
+    {
+      "roadmap_title": "ML System Design",
+      "category": "Interview Prep",
+      "description": "Production ML architecture patterns for interview preparation.",
+      "tasks": [
+        {
+          "title": "Design a Recommender System",
+          "description": "Candidate generation, ranking, features, and evaluation.",
+          "duration": "1 week",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Outline candidate generation vs ranking phases",
+              false
+            ],
+            [
+              "Discuss feature stores and vector databases",
+              false
+            ],
+            [
+              "Design offline vs online metric evaluation",
+              false
+            ]
+          ],
+          "links": [
+            "https://bytebytego.com/courses/machine-learning-system-design-interview",
+            "https://bytebytego.com/guides/system-design-cheat-sheet/"
+          ]
+        },
+        {
+          "title": "Design a Visual Search Engine",
+          "description": "Embedding pipelines and ANN serving for image similarity search.",
+          "duration": "1 week",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Explain embedding generation pipelines",
+              false
+            ],
+            [
+              "Design Approximate Nearest Neighbor (ANN) index serving layer",
+              false
+            ]
+          ],
+          "links": [
+            "https://bytebytego.com/courses/machine-learning-system-design-interview/youtube-video-search",
+            "https://bytebytego.com/courses/machine-learning-system-design-interview"
+          ]
+        },
+        {
+          "title": "Design an Ad Click Prediction System",
+          "description": "High-throughput online inference and continual learning for CTR prediction.",
+          "duration": "1 week",
+          "type": "problem",
+          "deliverables": [
+            [
+              "Design the online inference pipeline under strict latency SLA",
+              false
+            ],
+            [
+              "Address data staleness and continual learning pipelines",
+              false
+            ]
+          ],
+          "links": [
+            "https://bytebytego.com/courses/machine-learning-system-design-interview",
+            "https://bytebytego.com/guides/system-design-cheat-sheet/"
+          ]
+        }
+      ]
+    }
+  ]
+}
