@@ -7,14 +7,19 @@ import { Label } from "./ui/label";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Slider } from "./ui/slider";
 import { Textarea } from "./ui/textarea";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, Search, Network } from "lucide-react";
+import { Input } from "./ui/input";
 
 interface OnboardingData {
     level: string;
     targetRole: string;
+    otherRole?: string;
     timeline: string;
     hoursPerWeek: number;
     weaknesses: string[];
+    struggles: string[];
+    networkingOnline: number;
+    networkingInPerson: number;
     topicConfidence: {
         arrays: number;
         graphs: number;
@@ -23,6 +28,7 @@ interface OnboardingData {
     };
     constraints: string;
     pastExperience: string;
+    additionalInfo: string;
 }
 
 interface OnboardingProps {
@@ -34,9 +40,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     const [data, setData] = useState<OnboardingData>({
         level: "",
         targetRole: "",
+        otherRole: "",
         timeline: "",
         hoursPerWeek: 10,
         weaknesses: [],
+        struggles: [],
+        networkingOnline: 50,
+        networkingInPerson: 50,
         topicConfidence: {
             arrays: 50,
             graphs: 50,
@@ -45,18 +55,19 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         },
         constraints: "",
         pastExperience: "",
+        additionalInfo: "",
     });
 
     const updateData = (field: string, value: any) => {
         setData((prev) => ({ ...prev, [field]: value }));
     };
 
-    const toggleWeakness = (weakness: string) => {
+    const toggleMultiSelect = (field: "weaknesses" | "struggles", value: string) => {
         setData((prev) => ({
             ...prev,
-            weaknesses: prev.weaknesses.includes(weakness)
-                ? prev.weaknesses.filter((w) => w !== weakness)
-                : [...prev.weaknesses, weakness],
+            [field]: prev[field].includes(value)
+                ? prev[field].filter((v) => v !== value)
+                : [...prev[field], value],
         }));
     };
 
@@ -67,6 +78,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         }));
     };
 
+    const totalSteps = 6;
+
     const canProceed = () => {
         switch (step) {
             case 0:
@@ -74,10 +87,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             case 1:
                 return true;
             case 2:
-                return data.targetRole !== "" && data.timeline !== "";
+                return data.targetRole !== "" && data.timeline !== "" && (data.targetRole !== "Other" || (data.otherRole?.trim() !== ""));
             case 3:
-                return data.weaknesses.length > 0;
+                return data.struggles.length > 0;
             case 4:
+                return true;
+            case 5:
                 return true;
             default:
                 return false;
@@ -85,7 +100,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     };
 
     const handleNext = () => {
-        if (step < 4) {
+        if (step < totalSteps - 1) {
             setStep(step + 1);
         } else {
             onComplete(data);
@@ -99,29 +114,29 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     };
 
     return (
-        <div className="flex items-center justify-center p-6">
-            <Card className="w-full max-w-2xl p-8 shadow-lg border-slate-100">
+        <div className="flex items-center justify-center p-6 bg-zinc-950 min-h-screen font-sans">
+            <Card className="w-full max-w-2xl p-8 shadow-sm border-zinc-800 bg-zinc-900 rounded-lg">
                 <div className="mb-8">
                     <div className="flex justify-between items-center mb-2">
-                        <h1 className="text-2xl font-semibold text-slate-900">Let's personalize your prep</h1>
-                        <span className="text-sm text-slate-500 font-medium">Step {step + 1} of 5</span>
+                        <h1 className="text-xl font-semibold text-zinc-50 tracking-tight">Let's personalize your prep</h1>
+                        <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Step {step + 1} of {totalSteps}</span>
                     </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full mt-4">
+                    <div className="w-full bg-zinc-800 h-1 rounded-full mt-4 overflow-hidden">
                         <div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
-                            style={{ width: `${((step + 1) / 5) * 100}%` }}
+                            className="bg-indigo-500 h-1 transition-all duration-300 ease-out"
+                            style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
                         />
                     </div>
                 </div>
 
                 <div className="min-h-[420px]">
                     {step === 0 && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div>
-                                <h2 className="text-xl font-medium text-slate-900 mb-2">
+                                <h2 className="text-lg font-medium text-zinc-50 mb-1">
                                     What's your current level?
                                 </h2>
-                                <p className="text-sm text-slate-600 mb-6">
+                                <p className="text-sm text-zinc-400 mb-6">
                                     Be honest — this helps us calibrate your plan
                                 </p>
                             </div>
@@ -146,15 +161,15 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                                     ].map((option) => (
                                         <label
                                             key={option.value}
-                                            className={`flex items-start space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${data.level === option.value
-                                                    ? "border-blue-600 bg-blue-50/50 shadow-sm"
-                                                    : "border-slate-100 hover:border-slate-200 hover:bg-slate-50/50"
+                                            className={`flex items-start space-x-3 p-4 rounded-md border cursor-pointer transition-all duration-200 ${data.level === option.value
+                                                ? "border-indigo-500 bg-indigo-500/10 text-indigo-100 shadow-sm"
+                                                : "border-zinc-800 hover:border-zinc-700 bg-zinc-950/50 hover:bg-zinc-800 text-zinc-300"
                                                 }`}
                                         >
-                                            <RadioGroupItem value={option.value} id={option.value} className="mt-1" />
+                                            <RadioGroupItem value={option.value} id={option.value} className="mt-0.5 border-zinc-600 text-indigo-500" />
                                             <div className="flex-1">
-                                                <div className="font-semibold text-slate-900">{option.label}</div>
-                                                <div className="text-sm text-slate-500 leading-relaxed">{option.desc}</div>
+                                                <div className="font-medium text-sm">{option.label}</div>
+                                                <div className={`text-xs mt-1 ${data.level === option.value ? "text-indigo-300/80" : "text-zinc-500"}`}>{option.desc}</div>
                                             </div>
                                         </label>
                                     ))}
@@ -164,12 +179,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     )}
 
                     {step === 1 && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div>
-                                <h2 className="text-xl font-medium text-slate-900 mb-2">
+                                <h2 className="text-lg font-medium text-zinc-50 mb-1">
                                     How confident are you with these topics?
                                 </h2>
-                                <p className="text-sm text-slate-600 mb-6">
+                                <p className="text-sm text-zinc-400 mb-6">
                                     Slide to rate your comfort level (0 = never studied, 100 = very confident)
                                 </p>
                             </div>
@@ -181,9 +196,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                                     { key: "systemDesign" as const, label: "System Design" },
                                 ].map((topic) => (
                                     <div key={topic.key} className="space-y-4">
-                                        <div className="flex justify-between items-center bg-slate-50/50 p-2 rounded-lg px-3">
-                                            <Label className="text-slate-700 font-semibold">{topic.label}</Label>
-                                            <span className="text-sm font-bold text-blue-600 bg-blue-100/50 px-2 py-0.5 rounded">
+                                        <div className="flex justify-between items-center rounded-md px-1">
+                                            <Label className="text-zinc-300 font-medium text-sm">{topic.label}</Label>
+                                            <span className="text-xs font-semibold text-zinc-400">
                                                 {data.topicConfidence[topic.key]}%
                                             </span>
                                         </div>
@@ -201,19 +216,19 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     )}
 
                     {step === 2 && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div>
-                                <h2 className="text-xl font-medium text-slate-900 mb-2">
+                                <h2 className="text-lg font-medium text-zinc-50 mb-1">
                                     What's your target role & timeline?
                                 </h2>
-                                <p className="text-sm text-slate-600 mb-6">
+                                <p className="text-sm text-zinc-400 mb-6">
                                     This helps us prioritize topics and set the right pace
                                 </p>
                             </div>
 
                             <div className="space-y-8">
                                 <div>
-                                    <Label className="text-slate-800 font-semibold mb-4 block">Target Role</Label>
+                                    <Label className="text-zinc-200 font-medium mb-3 block text-sm">Target Role</Label>
                                     <RadioGroup
                                         value={data.targetRole}
                                         onValueChange={(val) => updateData("targetRole", val)}
@@ -223,22 +238,34 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                                                 (role) => (
                                                     <label
                                                         key={role}
-                                                        className={`p-4 rounded-xl border-2 cursor-pointer text-center transition-all duration-200 ${data.targetRole === role
-                                                                ? "border-blue-600 bg-blue-50/50 text-blue-700 shadow-sm"
-                                                                : "border-slate-100 hover:border-slate-200 hover:bg-slate-50/50"
+                                                        className={`p-3 rounded-md border cursor-pointer text-center text-sm transition-all duration-200 ${data.targetRole === role
+                                                            ? "border-indigo-500 bg-indigo-500/10 text-indigo-100 shadow-sm"
+                                                            : "border-zinc-800 hover:border-zinc-700 bg-zinc-950/50 hover:bg-zinc-800 text-zinc-300"
                                                             }`}
                                                     >
                                                         <RadioGroupItem value={role} id={role} className="sr-only" />
-                                                        <div className="font-semibold">{role}</div>
+                                                        <div className="font-medium">{role}</div>
                                                     </label>
                                                 )
                                             )}
                                         </div>
                                     </RadioGroup>
+
+                                    {data.targetRole === "Other" && (
+                                        <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <Label className="text-zinc-400 text-xs mb-1 block">Please specify your role</Label>
+                                            <Input
+                                                placeholder="e.g. Embedded Engineer..."
+                                                value={data.otherRole}
+                                                onChange={(e) => updateData("otherRole", e.target.value)}
+                                                className="bg-zinc-950 border-zinc-800 rounded-md text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-700"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div>
-                                    <Label className="text-slate-800 font-semibold mb-4 block">Interview Timeline</Label>
+                                    <Label className="text-zinc-200 font-medium mb-3 block text-sm">Interview Timeline</Label>
                                     <RadioGroup
                                         value={data.timeline}
                                         onValueChange={(val) => updateData("timeline", val)}
@@ -252,13 +279,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                                             ].map((time) => (
                                                 <label
                                                     key={time}
-                                                    className={`p-4 rounded-xl border-2 cursor-pointer text-center transition-all duration-200 ${data.timeline === time
-                                                            ? "border-blue-600 bg-blue-50/50 text-blue-700 shadow-sm"
-                                                            : "border-slate-100 hover:border-slate-200 hover:bg-slate-50/50"
+                                                    className={`p-3 rounded-md border cursor-pointer text-center text-sm transition-all duration-200 ${data.timeline === time
+                                                        ? "border-indigo-500 bg-indigo-500/10 text-indigo-100 shadow-sm"
+                                                        : "border-zinc-800 hover:border-zinc-700 bg-zinc-950/50 hover:bg-zinc-800 text-zinc-300"
                                                         }`}
                                                 >
                                                     <RadioGroupItem value={time} id={time} className="sr-only" />
-                                                    <div className="font-semibold">{time}</div>
+                                                    <div className="font-medium">{time}</div>
                                                 </label>
                                             ))}
                                         </div>
@@ -269,55 +296,60 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     )}
 
                     {step === 3 && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div>
-                                <h2 className="text-xl font-medium text-slate-900 mb-2">
-                                    What are your main weaknesses?
+                                <h2 className="text-lg font-medium text-zinc-50 mb-1">
+                                    What do you struggle with most?
                                 </h2>
-                                <p className="text-sm text-slate-600 mb-6">
-                                    Select all that apply — we'll focus your plan on these areas
+                                <p className="text-sm text-zinc-400 mb-6">
+                                    Select all that apply — we'll tailor your plan to overcome these hurdles
                                 </p>
                             </div>
                             <div className="space-y-3">
                                 {[
                                     {
-                                        value: "conceptual",
-                                        label: "Conceptual understanding",
-                                        desc: "Understanding the 'why' behind algorithms",
+                                        value: "interviews",
+                                        label: "Getting interviews",
+                                        desc: "Resume, networking, or applications",
                                     },
                                     {
-                                        value: "patterns",
-                                        label: "Pattern recognition",
-                                        desc: "Identifying which approach to use",
+                                        value: "oas",
+                                        label: "Passing OAs",
+                                        desc: "Online assessments and automated coding tests",
                                     },
                                     {
-                                        value: "speed",
-                                        label: "Speed & efficiency",
-                                        desc: "Solving problems within time limits",
+                                        value: "technical_dsa",
+                                        label: "Technical interviews (DSA)",
+                                        desc: "Data structures, algorithms, and logic",
                                     },
                                     {
-                                        value: "communication",
-                                        label: "Communication",
-                                        desc: "Explaining solutions clearly",
+                                        value: "technical_spec",
+                                        label: "Technical (Specialization)",
+                                        desc: "Data Science, Networking, Embedded, etc.",
                                     },
-                                ].map((weakness) => (
+                                    {
+                                        value: "behavioral",
+                                        label: "Behavioral interviews",
+                                        desc: "Soft skills and culture fit",
+                                    },
+                                ].map((struggle) => (
                                     <label
-                                        key={weakness.value}
-                                        className={`flex items-start space-x-3 p-5 rounded-xl border-2 cursor-pointer transition-all duration-200 ${data.weaknesses.includes(weakness.value)
-                                                ? "border-blue-600 bg-blue-50/50 shadow-sm"
-                                                : "border-slate-100 hover:border-slate-200 hover:bg-slate-50/50"
+                                        key={struggle.value}
+                                        className={`flex items-start space-x-3 p-4 rounded-md border cursor-pointer transition-all duration-200 ${data.struggles.includes(struggle.value)
+                                            ? "border-indigo-500 bg-indigo-500/10 text-indigo-100 shadow-sm"
+                                            : "border-zinc-800 hover:border-zinc-700 bg-zinc-950/50 hover:bg-zinc-800 text-zinc-300"
                                             }`}
-                                        onClick={() => toggleWeakness(weakness.value)}
+                                        onClick={() => toggleMultiSelect("struggles", struggle.value)}
                                     >
                                         <div
-                                            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center mt-1 transition-colors duration-200 ${data.weaknesses.includes(weakness.value)
-                                                    ? "border-blue-600 bg-blue-600"
-                                                    : "border-slate-300"
+                                            className={`w-4 h-4 rounded-sm border flex items-center justify-center mt-0.5 transition-colors duration-200 ${data.struggles.includes(struggle.value)
+                                                ? "border-indigo-500 bg-indigo-600"
+                                                : "border-zinc-700 bg-zinc-950"
                                                 }`}
                                         >
-                                            {data.weaknesses.includes(weakness.value) && (
+                                            {data.struggles.includes(struggle.value) && (
                                                 <svg
-                                                    className="w-3.5 h-3.5 text-white"
+                                                    className="w-3 h-3 text-white"
                                                     fill="none"
                                                     strokeLinecap="round"
                                                     strokeLinejoin="round"
@@ -330,8 +362,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                                             )}
                                         </div>
                                         <div className="flex-1">
-                                            <div className="font-semibold text-slate-900">{weakness.label}</div>
-                                            <div className="text-sm text-slate-500 leading-relaxed">{weakness.desc}</div>
+                                            <div className="font-medium text-sm">{struggle.label}</div>
+                                            <div className={`text-xs mt-1 ${data.struggles.includes(struggle.value) ? "text-indigo-300/80" : "text-zinc-500"}`}>{struggle.desc}</div>
                                         </div>
                                     </label>
                                 ))}
@@ -340,21 +372,75 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     )}
 
                     {step === 4 && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div>
-                                <h2 className="text-xl font-medium text-slate-900 mb-2">
+                                <h2 className="text-lg font-medium text-zinc-50 mb-1">
+                                    Networking familiarity
+                                </h2>
+                                <p className="text-sm text-zinc-400 mb-6">
+                                    How comfortable are you with networking? (0 = never done it, 100 = pro)
+                                </p>
+                            </div>
+                            <div className="space-y-8 py-4">
+                                <div className="space-y-4 shadow-sm border border-zinc-800 bg-zinc-950/50 p-5 rounded-md">
+                                    <div className="flex justify-between items-center px-1">
+                                        <div className="flex items-center gap-2">
+                                            <Network className="w-4 h-4 text-zinc-400" />
+                                            <Label className="text-zinc-200 font-medium text-sm">Online Networking</Label>
+                                        </div>
+                                        <span className="text-xs font-semibold text-zinc-400">
+                                            {data.networkingOnline}%
+                                        </span>
+                                    </div>
+                                    <Slider
+                                        value={[data.networkingOnline]}
+                                        onValueChange={(val) => updateData("networkingOnline", val[0])}
+                                        max={100}
+                                        step={5}
+                                        className="w-full"
+                                    />
+                                    <p className="text-xs text-zinc-500 px-1">LinkedIn, cold emails, online communities, etc.</p>
+                                </div>
+
+                                <div className="space-y-4 shadow-sm border border-zinc-800 bg-zinc-950/50 p-5 rounded-md">
+                                    <div className="flex justify-between items-center px-1">
+                                        <div className="flex items-center gap-2">
+                                            <Search className="w-4 h-4 text-zinc-400" />
+                                            <Label className="text-zinc-200 font-medium text-sm">In-person Networking</Label>
+                                        </div>
+                                        <span className="text-xs font-semibold text-zinc-400">
+                                            {data.networkingInPerson}%
+                                        </span>
+                                    </div>
+                                    <Slider
+                                        value={[data.networkingInPerson]}
+                                        onValueChange={(val) => updateData("networkingInPerson", val[0])}
+                                        max={100}
+                                        step={5}
+                                        className="w-full"
+                                    />
+                                    <p className="text-xs text-zinc-500 px-1">Career fairs, meetups, coffee chats, etc.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 5 && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div>
+                                <h2 className="text-lg font-medium text-zinc-50 mb-1">
                                     Final details
                                 </h2>
-                                <p className="text-sm text-slate-600 mb-6">
-                                    This helps us create a realistic, achievable plan
+                                <p className="text-sm text-zinc-400 mb-6">
+                                    Help us understand your constraints and background
                                 </p>
                             </div>
 
-                            <div className="space-y-8">
-                                <div>
-                                    <div className="flex justify-between items-center mb-4 bg-slate-50/50 p-2 rounded-lg px-3">
-                                        <Label className="text-slate-800 font-semibold">Hours per week available</Label>
-                                        <span className="text-sm font-bold text-blue-600 bg-blue-100/50 px-2 py-0.5 rounded">
+                            <div className="space-y-6">
+                                <div className="p-4 rounded-md border border-zinc-800 shadow-sm bg-zinc-950/50">
+                                    <div className="flex justify-between items-center mb-4 px-1">
+                                        <Label className="text-zinc-200 font-medium text-sm">Hours per week available</Label>
+                                        <span className="text-xs font-semibold text-zinc-400">
                                             {data.hoursPerWeek} hours
                                         </span>
                                     </div>
@@ -368,28 +454,49 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                                     />
                                 </div>
 
-                                <div className="space-y-4">
+                                <div className="space-y-4 pt-2">
                                     <div>
-                                        <Label className="text-slate-800 font-semibold mb-2 block">
-                                            Constraints (optional)
+                                        <Label className="text-zinc-200 font-medium mb-2 block text-sm">
+                                            Any other weaknesses? (optional)
                                         </Label>
+                                        <div className="grid grid-cols-2 gap-2 mb-4">
+                                            {[
+                                                { value: "conceptual", label: "Conceptual" },
+                                                { value: "patterns", label: "Patterns" },
+                                                { value: "speed", label: "Speed" },
+                                                { value: "communication", label: "Communication" },
+                                            ].map((w) => (
+                                                <Button
+                                                    key={w.value}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className={`justify-start rounded-md font-normal ${data.weaknesses.includes(w.value) ? 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-100 border-indigo-500/30' : 'text-zinc-400 border-zinc-800 bg-transparent hover:text-zinc-100 hover:bg-zinc-800'}`}
+                                                    onClick={() => toggleMultiSelect("weaknesses", w.value)}
+                                                >
+                                                    {w.label}
+                                                </Button>
+                                            ))}
+                                        </div>
                                         <Textarea
-                                            placeholder="e.g., Full-time job, visa timeline, specific company targets..."
+                                            placeholder="Constraints: e.g. Full-time job, visa timeline..."
                                             value={data.constraints}
                                             onChange={(e) => updateData("constraints", e.target.value)}
-                                            className="min-h-[100px] bg-slate-50/30 focus:bg-white transition-colors border-slate-200"
+                                            className="min-h-[80px] bg-zinc-950 border-zinc-800 rounded-md focus:border-zinc-700 transition-all mb-4 text-sm resize-none text-zinc-100 placeholder:text-zinc-600"
                                         />
-                                    </div>
-
-                                    <div>
-                                        <Label className="text-slate-800 font-semibold mb-2 block">
-                                            Past prep experience
-                                        </Label>
                                         <Textarea
-                                            placeholder="e.g., Solved ~30 LC problems, read CTCI, took a course..."
+                                            placeholder="Past Experience: e.g. Solved ~30 LC problems..."
                                             value={data.pastExperience}
                                             onChange={(e) => updateData("pastExperience", e.target.value)}
-                                            className="min-h-[100px] bg-slate-50/30 focus:bg-white transition-colors border-slate-200"
+                                            className="min-h-[80px] bg-zinc-950 border-zinc-800 rounded-md focus:border-zinc-700 transition-all mb-4 text-sm resize-none text-zinc-100 placeholder:text-zinc-600"
+                                        />
+                                        <Label className="text-zinc-200 font-medium mb-2 block text-sm">
+                                            Anything else you'd like to share?
+                                        </Label>
+                                        <Textarea
+                                            placeholder="Provide any additional context or constraints..."
+                                            value={data.additionalInfo}
+                                            onChange={(e) => updateData("additionalInfo", e.target.value)}
+                                            className="min-h-[100px] bg-zinc-950 border-zinc-800 rounded-md focus:border-zinc-700 transition-all text-sm resize-none text-zinc-100 placeholder:text-zinc-600"
                                         />
                                     </div>
                                 </div>
@@ -398,23 +505,23 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     )}
                 </div>
 
-                <div className="flex justify-between mt-10 pt-8 border-t border-slate-100">
+                <div className="flex justify-between mt-8 pt-6 border-t border-zinc-800">
                     <Button
                         variant="outline"
                         onClick={handleBack}
                         disabled={step === 0}
-                        className="px-6 py-6 rounded-xl hover:bg-slate-100 border-2 font-semibold"
+                        className="rounded-md font-medium text-zinc-300 border-zinc-800 bg-transparent hover:bg-zinc-800 hover:text-white h-9 px-4 disabled:opacity-50"
                     >
-                        <ChevronLeft className="w-5 h-5 mr-1" />
+                        <ChevronLeft className="w-4 h-4 mr-1" />
                         Back
                     </Button>
                     <Button
                         onClick={handleNext}
                         disabled={!canProceed()}
-                        className="px-8 py-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base shadow-md shadow-blue-200 gap-2 transition-all hover:translate-x-1"
+                        className="rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm h-9 px-6 transition-colors border-0 disabled:opacity-50"
                     >
-                        {step === 4 ? "Generate My Plan" : "Continue"}
-                        <ChevronRight className="w-5 h-5" />
+                        {step === totalSteps - 1 ? "Generate Plan" : "Continue"}
+                        {step !== totalSteps - 1 && <ChevronRight className="w-4 h-4 ml-1" />}
                     </Button>
                 </div>
             </Card>

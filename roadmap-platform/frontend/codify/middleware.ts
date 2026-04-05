@@ -16,7 +16,20 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.includes(".");
 
-  if (isPublic) return NextResponse.next();
+  if (isPublic) {
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+
+    if (token) {
+      const isOnboarded = (token as any).onboarded;
+      if (pathname === "/" || pathname === "/signin" || pathname === "/signup") {
+        return NextResponse.redirect(new URL(isOnboarded ? "/dashboard" : "/onboarding", request.url));
+      }
+    }
+    return NextResponse.next();
+  }
 
   const token = await getToken({
     req: request,
@@ -29,6 +42,15 @@ export async function middleware(request: NextRequest) {
       signIn.searchParams.set("callbackUrl", pathname);
     }
     return NextResponse.redirect(signIn);
+  }
+
+  const isOnboarded = (token as any).onboarded;
+  if (!isOnboarded && pathname !== "/onboarding") {
+    return NextResponse.redirect(new URL("/onboarding", request.url));
+  }
+
+  if (isOnboarded && pathname === "/onboarding") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return NextResponse.next();

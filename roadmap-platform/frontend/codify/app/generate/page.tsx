@@ -1,0 +1,97 @@
+"use client";
+
+import { Onboarding } from "@/components/Onboarding";
+import { useRouter } from "next/navigation";
+import { fetchBackend } from "@/lib/api";
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { RoadmapSkeleton } from "@/components/RoadmapSkeleton";
+
+export default function GeneratePage() {
+    const router = useRouter();
+    const [generating, setGenerating] = useState(false);
+
+    const handleComplete = async (data: any) => {
+        setGenerating(true);
+        try {
+            const genRes = await fetchBackend("/generate-plan", {
+                method: "POST",
+                body: JSON.stringify(data),
+            });
+
+            if (genRes.ok) {
+                const genData = await genRes.json();
+                if (genData.roadmap_id) {
+                    // Start collision check logic
+                    try {
+                        const [allRoadmapsRes, newRoadmapRes] = await Promise.all([
+                            fetchBackend("/roadmaps"),
+                            fetchBackend(`/roadmaps/${genData.roadmap_id}`)
+                        ]);
+                        
+                        if (allRoadmapsRes.ok && newRoadmapRes.ok) {
+                            const allRoadmaps = await allRoadmapsRes.json();
+                            const newRoadmapData = await newRoadmapRes.json();
+                            const { roadmap: newRoadmap } = newRoadmapData;
+                            
+                            const baseTitle = newRoadmap.title;
+                            const existingTitles = allRoadmaps
+                                .filter((r: any) => r.id !== genData.roadmap_id)
+                                .map((r: any) => r.title);
+                            
+                            if (existingTitles.includes(baseTitle)) {
+                                let counter = 1;
+                                let uniqueTitle = `${baseTitle} (${counter})`;
+                                while (existingTitles.includes(uniqueTitle)) {
+                                    counter++;
+                                    uniqueTitle = `${baseTitle} (${counter})`;
+                                }
+                                
+                                // Update the new roadmap with the unique title
+                                await fetchBackend(`/roadmaps/${genData.roadmap_id}`, {
+                                    method: "PATCH",
+                                    body: JSON.stringify({ title: uniqueTitle })
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Collision check failed:", e);
+                    }
+                    
+                    router.push(`/roadmaps/${genData.roadmap_id}/edit`);
+                } else {
+                    router.push("/dashboard");
+                }
+            } else {
+                console.error("Failed to generate AI plan");
+                router.push("/dashboard");
+            }
+        } catch (error) {
+            console.error("Error generating plan:", error);
+            router.push("/dashboard");
+        }
+    };
+
+    if (generating) {
+        return (
+            <div className="min-h-screen bg-zinc-950 font-sans p-6 overflow-hidden">
+                <div className="max-w-4xl mx-auto space-y-6 pt-12 text-center flex flex-col items-center">
+                    <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
+                    <h2 className="text-xl font-medium tracking-tight text-zinc-100">Drafting your perfect plan...</h2>
+                    <p className="text-sm text-zinc-400 mb-12">
+                        Our AI Coach is analyzing your constraints and generating a personalized roadmap.
+                    </p>
+                </div>
+                <div className="opacity-40 select-none pointer-events-none grayscale px-4 blur-[1px]">
+                    <RoadmapSkeleton />
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-zinc-950 font-sans pb-12">
+            <Onboarding onComplete={handleComplete} />
+        </div>
+    );
+}

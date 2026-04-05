@@ -2,51 +2,59 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { Code2 } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function Navbar() {
     const { data: session, status } = useSession();
 
     return (
-        <nav className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-100 sticky top-0 z-50">
+        <nav className="flex items-center justify-between px-8 py-5 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 sticky top-0 z-50">
             <div className="flex items-center gap-8">
-                <Link href="/" className="text-2xl font-bold text-blue-600 tracking-tight">
+                <Link href="/landing" className="text-xl font-semibold text-zinc-50 tracking-tight flex items-center gap-2">
+                    <Code2 className="h-8 w-8 text-indigo-500" />
                     Codify
                 </Link>
-                <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-                    <Link href="#features" className="hover:text-blue-600 transition-colors">
-                        Features
-                    </Link>
-                    <Link href="#roadmap" className="hover:text-blue-600 transition-colors">
+                <div className="hidden md:flex items-center gap-6 text-base font-medium text-zinc-400">
+                    {status === "authenticated" ? (
+                        <Link href="/dashboard" className="hover:text-zinc-100 transition-colors">
+                            Dashboard
+                        </Link>
+                    ) : (
+                        <Link href="/landing#features" className="hover:text-zinc-100 transition-colors">
+                            Features
+                        </Link>
+                    )}
+                    <Link href="/onboarding/roadmaps" className="hover:text-zinc-100 transition-colors">
                         Roadmaps
                     </Link>
-                    <Link href="/onboarding" className="hover:text-blue-600 transition-colors">
-                        Try Onboarding
+                    <Link href="/onboarding" className="hover:text-zinc-100 transition-colors">
+                        {status === "authenticated" ? "New Roadmap" : "Try Onboarding"}
                     </Link>
                 </div>
             </div>
 
             <div className="flex items-center gap-4">
                 {status === "loading" ? (
-                    <div className="h-9 w-24 bg-slate-100 animate-pulse rounded-md" />
+                    <div className="h-9 w-24 bg-zinc-800/50 animate-pulse rounded-md" />
                 ) : status === "authenticated" ? (
                     <>
-                        <span className="text-sm font-medium text-slate-700 hidden sm:inline-block">
+                        <span className="text-base font-medium text-zinc-400 hidden sm:inline-block">
                             {session?.user?.email}
                         </span>
-                        <Button variant="outline" size="sm" onClick={() => signOut()}>
+                        <Button variant="outline" onClick={() => signOut()} className="rounded-md font-medium border-zinc-800 bg-transparent hover:bg-zinc-900 text-zinc-300">
                             Sign out
                         </Button>
                     </>
                 ) : (
                     <>
                         <Link href="/signin">
-                            <Button variant="ghost" size="sm" className="font-semibold">
+                            <Button variant="ghost" className="font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900">
                                 Sign in
                             </Button>
                         </Link>
                         <Link href="/signup">
-                            <Button size="sm" className="font-semibold shadow-sm">
+                            <Button className="font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md border-0">
                                 Get Started
                             </Button>
                         </Link>

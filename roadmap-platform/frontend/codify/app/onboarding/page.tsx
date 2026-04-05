@@ -2,15 +2,57 @@
 
 import { Onboarding } from "@/components/Onboarding";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { fetchBackend } from "@/lib/api";
 
 export default function OnboardingPage() {
     const router = useRouter();
 
-    const handleComplete = (data: any) => {
+    const { update } = useSession();
+
+    const handleComplete = async (data: any) => {
         console.log("Onboarding complete:", data);
-        // In a real app, we would save this to the database
-        // For now, redirect to dashboard
-        router.push("/");
+
+        try {
+            const res = await fetch("/api/user/onboard", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+            });
+
+            if (res.ok) {
+                // Update session to reflect onboarded status
+                await update({ onboarded: true });
+
+                // Trigger AI Roadmap Generation (Backend)
+                try {
+                    console.log("Triggering AI roadmap generation...");
+                    const genRes = await fetchBackend("/generate-plan", {
+                        method: "POST",
+                        body: JSON.stringify(data),
+                    });
+
+                    if (genRes.ok) {
+                        const data = await genRes.json();
+                        if (data.roadmap_id) {
+                            router.push(`/roadmaps/${data.roadmap_id}/edit`);
+                        } else {
+                            router.push("/dashboard");
+                        }
+                    } else {
+                        console.error("Failed to generate AI plan");
+                        router.push("/dashboard"); // Still go to dashboard, maybe it shows empty
+                    }
+                } catch (genError) {
+                    console.error("Error calling generate-plan:", genError);
+                    router.push("/dashboard");
+                }
+            } else {
+                console.error("Failed to save onboarding status");
+            }
+        } catch (error) {
+            console.error("Error saving onboarding status:", error);
+        }
     };
 
     return (

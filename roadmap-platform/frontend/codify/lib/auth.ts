@@ -1,6 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import GitHubProvider from "next-auth/providers/github";
+import LinkedInProvider from "next-auth/providers/linkedin";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -16,9 +16,26 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
     }),
-    GitHubProvider({
-      clientId: process.env.GITHUB_ID ?? "",
-      clientSecret: process.env.GITHUB_SECRET ?? "",
+    LinkedInProvider({
+      clientId: process.env.LINKEDIN_CLIENT_ID ?? "",
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET ?? "",
+      wellKnown: "https://www.linkedin.com/oauth/.well-known/openid-configuration",
+      client: {
+        token_endpoint_auth_method: "client_secret_post",
+      },
+      authorization: {
+        params: {
+          scope: "openid profile email",
+        },
+      },
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+        };
+      },
     }),
     CredentialsProvider({
       name: "Email",
@@ -43,6 +60,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name || user.email.split("@")[0],
+          onboarded: user.onboarded,
         };
       },
     }),
@@ -52,17 +70,76 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.user_id = user.id;
-        token.email = user.email ?? undefined;
+    async signIn({ user, account }) {
+      // For OAuth providers, upsert the user into the Prisma database
+      if (account && account.provider !== "credentials" && user.email) {
+        try {
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email },
+          });
+
+          if (!existingUser) {
+            // Create new user for this OAuth account
+            await prisma.user.create({
+              data: {
+                email: user.email,
+                name: user.name || user.email.split("@")[0],
+                password: "", // OAuth users don't need a password
+                onboarded: false,
+              },
+            });
+          }
+        } catch (e) {
+          console.error("[Auth] Error upserting OAuth user:", e);
+          // Don't block sign-in if DB upsert fails
+        }
       }
+      return true;
+    },
+    async jwt({ token, user, account, trigger, session }) {
+      // On initial sign-in, resolve the DB user's cuid
+      if (user) {
+        if (account && account.provider !== "credentials" && user.email) {
+          // OAuth: look up the Prisma user by email to get the cuid
+          try {
+            const dbUser = await prisma.user.findUnique({
+              where: { email: user.email },
+            });
+            if (dbUser) {
+              token.user_id = dbUser.id;
+              token.email = dbUser.email;
+              token.onboarded = dbUser.onboarded;
+            } else {
+              // Fallback if DB lookup fails
+              token.user_id = user.id;
+              token.email = user.email ?? undefined;
+              token.onboarded = false;
+            }
+          } catch {
+            token.user_id = user.id;
+            token.email = user.email ?? undefined;
+            token.onboarded = false;
+          }
+        } else {
+          // Credentials: user.id is already the Prisma cuid
+          token.user_id = user.id;
+          token.email = user.email ?? undefined;
+          token.onboarded = (user as any).onboarded;
+        }
+      }
+
+      // Handle session update trigger
+      if (trigger === "update" && session?.onboarded !== undefined) {
+        token.onboarded = session.onboarded;
+      }
+
       return token;
     },
     session({ session, token }) {
       if (session.user) {
         (session.user as { id?: string }).id = token.user_id as string;
         session.user.email = token.email ?? session.user.email ?? null;
+        (session.user as any).onboarded = token.onboarded;
       }
       return session;
     },

@@ -37,12 +37,14 @@ class Task(SQLModel, table=True):
     duration: Optional[str] = None
     type: str = Field(default="info") # problem, guide, info, goal
     status: str = Field(default="todo")
-    deliverables: Optional[List[tuple[str, bool]]] = Field(default=None, sa_column=Column(JSON))
+    # deliverables is a list of objects: {"title": str, "completed": bool, "completedAt": Optional[str]}
+    deliverables: Optional[List[dict]] = Field(default=None, sa_column=Column(JSON))
     links: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
     roadmapId: str = Field(foreign_key="Roadmap.id")
     roadmap: Roadmap = Relationship(back_populates="tasks")
     deadlines: List["Deadline"] = Relationship(back_populates="task")
     order: int
+    completedAt: Optional[datetime] = Field(default=None)
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
 

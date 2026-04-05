@@ -38,7 +38,7 @@ export default function SignUpPage() {
                     setError("Registration successful, but login failed. Please sign in manually.");
                     router.push("/signin");
                 } else {
-                    router.push("/");
+                    router.push("/landing");
                 }
             } else {
                 const data = await res.json();
@@ -52,58 +52,60 @@ export default function SignUpPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-                <h1 className="text-xl font-semibold text-gray-900 mb-2">
+        <div className="min-h-screen flex items-center justify-center bg-zinc-950 font-sans text-zinc-50">
+            <div className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-8 shadow-2xl">
+                <h1 className="text-xl font-semibold tracking-tight text-zinc-50 mb-1">
                     Create New Account
                 </h1>
-                <p className="text-sm text-gray-500 mb-6">
+                <p className="text-sm text-zinc-400 mb-6">
                     Sign up to get started with Codify.
                 </p>
 
                 {error && (
-                    <div className="mb-4 p-3 text-sm text-red-500 bg-red-50 rounded-lg">
+                    <div className="mb-4 p-3 text-sm text-rose-400 bg-rose-500/10 rounded-md border border-rose-500/20">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-3">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <input
                         name="name"
                         type="text"
                         placeholder="Full Name (Optional)"
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm"
+                        className="w-full rounded-md border border-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-shadow bg-zinc-950 text-zinc-100 placeholder:text-zinc-600"
                     />
                     <input
                         name="email"
                         type="email"
                         placeholder="Email"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm"
+                        className="w-full rounded-md border border-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-shadow bg-zinc-950 text-zinc-100 placeholder:text-zinc-600"
                     />
-                    <input
-                        name="password"
-                        type="password"
-                        placeholder="Password"
-                        required
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm"
-                    />
-                    <p className="text-xs text-gray-500">
-                        Password must be at least 8 characters, include a number, an uppercase letter, and a special character.
-                    </p>
+                    <div>
+                        <input
+                            name="password"
+                            type="password"
+                            placeholder="Password"
+                            required
+                            className="w-full rounded-md border border-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-shadow bg-zinc-950 text-zinc-100 placeholder:text-zinc-600"
+                        />
+                        <p className="text-[10px] text-zinc-500 mt-1.5 leading-relaxed">
+                            Password must be at least 8 characters, include a number, an uppercase letter, and a special character.
+                        </p>
+                    </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                        className="w-full rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 mt-2 text-center border-0"
                     >
                         {loading ? "Creating Account..." : "Create My Account"}
                     </button>
                 </form>
 
-                <div className="mt-4 text-center text-sm text-gray-500">
+                <div className="mt-6 text-center text-sm text-zinc-500">
                     Already have an account?{" "}
-                    <a href="/signin" className="font-medium text-gray-900 hover:underline">
+                    <a href="/signin" className="font-medium text-zinc-300 hover:text-indigo-400 transition-colors">
                         Sign in
                     </a>
                 </div>

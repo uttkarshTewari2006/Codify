@@ -26,6 +26,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def format_deliverables(deliverables):
+    """Converts various deliverable formats (string list, tuple list) into the standard object format."""
+    if not deliverables:
+        return []
+    
+    formatted = []
+    for d in deliverables:
+        if isinstance(d, str):
+            formatted.append({"title": d, "completed": False, "completedAt": None})
+        elif isinstance(d, (list, tuple)) and len(d) >= 2:
+            # Handle legacy [title, completed] format
+            formatted.append({
+                "title": d[0], 
+                "completed": d[1], 
+                "completedAt": datetime.utcnow().isoformat() if d[1] else None
+            })
+        elif isinstance(d, dict):
+            # Already in new format or partial
+            formatted.append({
+                "title": d.get("title", ""),
+                "completed": d.get("completed", False),
+                "completedAt": d.get("completedAt")
+            })
+    return formatted
+
 
 @app.get("/")
 def read_root():
@@ -48,7 +73,8 @@ def generate_plan(
         # Check if user exists in DB
         user = session.exec(select(User).where(User.id == user_id)).first()
         if not user:
-            user = User(id=user_id, email="", onboarded=True)
+            # Safety net: create user with unique placeholder email
+            user = User(id=user_id, email=f"{user_id}@placeholder.local", onboarded=True)
             session.add(user)
             session.commit()
 
@@ -78,7 +104,7 @@ def generate_plan(
                 duration=t['duration'],
                 type=t['type'],
                 order=t['order'],
-                deliverables=t.get('deliverables', []),
+                deliverables=format_deliverables(t.get('deliverables', [])),
                 links=t.get('links', []),
                 roadmapId=roadmap_id
             )
@@ -127,7 +153,7 @@ def regenerate_plan(
                 duration=t['duration'],
                 type=t['type'],
                 order=t['order'],
-                deliverables=t.get('deliverables', []),
+                deliverables=format_deliverables(t.get('deliverables', [])),
                 links=t.get('links', []),
                 roadmapId=roadmap_id
             )
@@ -260,6 +286,71 @@ def fork_curated_roadmap(
     except Exception as e:
         print(f"Error forking roadmap: {e}")
         raise HTTPException(status_code=500, detail="Failed to fork roadmap")
+
+@app.get("/recent-progress")
+def get_recent_progress(
+    user_id: str = Depends(get_user_id),
+    session: Session = Depends(get_session)
+):
+    """
+    Fetches all deliverables and tasks completed by the user in the last 7 days.
+    """
+    from datetime import timedelta
+    
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    
+    # 1. Fetch all roadmaps for the user to get context
+    roadmaps = session.exec(select(Roadmap).where(Roadmap.userId == user_id)).all()
+    roadmap_map = {r.id: r.title for r in roadmaps}
+    roadmap_ids = list(roadmap_map.keys())
+    
+    if not roadmap_ids:
+        return []
+    
+    # 2. Fetch all tasks for these roadmaps
+    tasks = session.exec(select(Task).where(Task.roadmapId.in_(roadmap_ids))).all()
+    
+    achievements = []
+    
+    for task in tasks:
+        # Check if task itself was completed recently
+        if task.completedAt and task.completedAt >= seven_days_ago:
+            achievements.append({
+                "id": task.id,
+                "type": "task",
+                "title": task.title,
+                "roadmapTitle": roadmap_map.get(task.roadmapId),
+                "completedAt": task.completedAt.isoformat()
+            })
+            
+        # Check deliverables
+        deliverables = task.deliverables or []
+        for d in deliverables:
+            if isinstance(d, dict):
+                comp_at_str = d.get("completedAt")
+                if d.get("completed") and comp_at_str:
+                    try:
+                        comp_at = datetime.fromisoformat(comp_at_str)
+                        # Remove timezone if present for comparison
+                        if comp_at.tzinfo:
+                            comp_at = comp_at.replace(tzinfo=None)
+                            
+                        if comp_at >= seven_days_ago:
+                            achievements.append({
+                                "id": f"{task.id}-deliverable-{d.get('title')}",
+                                "type": "deliverable",
+                                "title": d.get("title"),
+                                "taskTitle": task.title,
+                                "roadmapTitle": roadmap_map.get(task.roadmapId),
+                                "completedAt": comp_at_str
+                            })
+                    except (ValueError, TypeError):
+                        continue
+    
+    # Sort by date descending
+    achievements.sort(key=lambda x: x["completedAt"], reverse=True)
+    
+    return achievements
 
 # --- Deadline CRUD ---
 
@@ -435,7 +526,7 @@ def add_task(
         description=task_data.get("description", ""),
         duration=task_data.get("duration", ""),
         type=task_data.get("type", "info"),
-        deliverables=task_data.get("deliverables", None),
+        deliverables=format_deliverables(task_data.get("deliverables", None)),
         links=task_data.get("links", None),
         order=next_order,
         roadmapId=roadmap_id
@@ -472,8 +563,83 @@ def update_task(
         task.type = task_data["type"]
     if "status" in task_data:
         task.status = task_data["status"]
+        if task.status == "completed" and not task.completedAt:
+            task.completedAt = datetime.utcnow()
+        elif task.status != "completed":
+            task.completedAt = None
+
     if "deliverables" in task_data:
-        task.deliverables = task_data["deliverables"]
+        old_deliverables = task.deliverables or []
+        new_deliverables_raw = task_data["deliverables"]
+        
+        # Handle stringified JSON from frontend
+        if isinstance(new_deliverables_raw, str):
+            try:
+                new_deliverables = json.loads(new_deliverables_raw)
+            except:
+                new_deliverables = []
+        else:
+            new_deliverables = new_deliverables_raw
+            
+        if not isinstance(new_deliverables, list):
+            new_deliverables = []
+
+        # We need to preserve completion dates if they exist, 
+        # or set them if newly completed.
+        final_deliverables = []
+        for i, new_d in enumerate(new_deliverables):
+            # Ensure new_d is a dict (frontend might still send strings)
+            if isinstance(new_d, str):
+                new_d = {"title": new_d, "completed": False}
+            elif isinstance(new_d, (list, tuple)):
+                new_d = {"title": new_d[0], "completed": new_d[1]}
+            
+            # Find matching old deliverable to check for status change
+            # Default to checking by index, but ideally by title if possible?
+            # For now, index is safer for simple lists.
+            old_d = old_deliverables[i] if i < len(old_deliverables) else None
+            
+            title = new_d.get("title", "")
+            completed = new_d.get("completed", False)
+            completed_at = new_d.get("completedAt")
+            
+            if old_d:
+                # If it was a legacy tuple, convert it
+                if isinstance(old_d, (list, tuple)):
+                    old_d = {"title": old_d[0], "completed": old_d[1], "completedAt": None}
+                
+                # If status changed to completed, set timestamp
+                if completed and not old_d.get("completed"):
+                    completed_at = datetime.utcnow().isoformat()
+                elif not completed:
+                    completed_at = None
+                else:
+                    # Keep existing timestamp if it was already completed
+                    completed_at = old_d.get("completedAt") or completed_at
+            elif completed and not completed_at:
+                completed_at = datetime.utcnow().isoformat()
+                
+            final_deliverables.append({
+                "title": title,
+                "completed": completed,
+                "completedAt": completed_at
+            })
+            
+        task.deliverables = final_deliverables
+        
+        # Check if all deliverables are completed to auto-complete the task
+        if final_deliverables:
+            all_done = all(d.get("completed") for d in final_deliverables)
+            if all_done:
+                task.status = "completed"
+                if not task.completedAt:
+                    task.completedAt = datetime.utcnow()
+            else:
+                # If any are NOT completed, task is NOT completed
+                if task.status == "completed":
+                    task.status = "in_progress"
+                task.completedAt = None
+
     if "links" in task_data:
         task.links = task_data["links"]
     if "order" in task_data:
