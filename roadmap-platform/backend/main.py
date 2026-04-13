@@ -11,9 +11,25 @@ from datetime import datetime
 from auth import get_user_id
 from database import engine, Roadmap, Task, User, Deadline, get_session
 from generator import generate_roadmap_tasks, regenerate_roadmap_tasks
+from knowledge_base import KnowledgeBase
+from sqlalchemy.orm import Session as ORMSession
 import json
 
 app = FastAPI()
+kb = KnowledgeBase()
+
+# Secure Admin Dependency
+def get_current_admin(
+    user_id: str = Depends(get_user_id),
+    session: Session = Depends(get_session)
+) -> User:
+    user = session.exec(select(User).where(User.id == user_id)).first()
+    if not user or not user.isAdmin:
+        raise HTTPException(
+            status_code=403, 
+            detail="Forbidden: Admin access required"
+        )
+    return user
 
 # Allow frontend to talk to backend
 app.add_middleware(
@@ -137,7 +153,8 @@ def regenerate_plan(
 
     try:
         # Generate new tasks based on existing dashboard and feedback
-        tasks_data = regenerate_roadmap_tasks(existing_dashboard, feedback)
+        # Pass feedback as user_dislikes to the generator
+        tasks_data = regenerate_roadmap_tasks(existing_dashboard, feedback, knowledge_base=kb)
         
         # Delete old tasks
         old_tasks = session.exec(select(Task).where(Task.roadmapId == roadmap_id)).all()
@@ -167,9 +184,21 @@ def regenerate_plan(
 
 
 @app.get("/me")
-def get_me(user_id: str = Depends(get_user_id)):
-    """Protected: returns current user id from JWT. Requires Authorization: Bearer <token>."""
-    return {"user_id": user_id}
+def get_me(
+    user_id: str = Depends(get_user_id),
+    session: Session = Depends(get_session)
+):
+    """Protected: returns current user data. Requires Authorization: Bearer <token>."""
+    user = session.exec(select(User).where(User.id == user_id)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "user_id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "isAdmin": user.isAdmin,
+        "onboarded": user.onboarded
+    }
 
 
 @app.get("/roadmaps")
@@ -691,3 +720,29 @@ def reorder_tasks(
     
     session.commit()
     return {"message": "Order updated"}
+
+# --- Admin & RAG Management ---
+
+@app.get("/admin/rag/stats")
+def get_rag_stats(admin: User = Depends(get_current_admin)):
+    """Protected: returns RAG pipeline statistics."""
+    return kb.get_stats()
+
+@app.post("/admin/rag/ingest")
+def ingest_knowledge(admin: User = Depends(get_current_admin)):
+    """Protected: triggers knowledge document ingestion."""
+    kb.ingest_knowledge_docs()
+    return {"message": "Knowledge document ingestion triggered successfully"}
+
+@app.get("/admin/feedback")
+def get_feedback_logs(
+    user_id: str = Depends(get_user_id),
+    session: Session = Depends(get_session)
+):
+    """
+    Fetches all regeneration feedback logs.
+    Currently, we will just fetch recent Roadmap updates that came from regeneration.
+    (In Phase 2 we will use a proper FeedbackLog table)
+    """
+    # For now, let's just return a placeholder or query roadmaps with specific feedback
+    return {"message": "Feedback monitoring coming soon in Phase 2 with FeedbackLog table"}

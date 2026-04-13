@@ -4,13 +4,13 @@
 
 | Layer         | Choice                 | Notes                                                        |
 | ------------- | ---------------------- | ------------------------------------------------------------ |
-| Frontend      | **Next.js**            | App router, API routes for BFF if needed                     |
-| Backend API   | **FastAPI** (Python)   | RAG, orchestrator, CRUD; separate service                    |
-| Database      | **PostgreSQL**         | intake_profiles, plans, problems, community (no users table) |
-| Vector store  | **pgvector**           | User profile embeddings, same Postgres                       |
-| LLM           | **OpenAI**             | Plan generation, hints; via orchestrator                     |
-| Auth          | **Email + OAuth**      | Google + GitHub; NextAuth in Next.js                         |
-| Auth strategy | **Option B: JWT-only** | No session DB; FastAPI trusts JWT, no `users` table          |
+| Frontend      | **Next.js**            | App router, Tailwind CSS, Lucide Icons                       |
+| Backend API   | **FastAPI** (Python)   | RAG engine, generator orchestrator, SQLite integration       |
+| Database      | **SQLite** (Shared)    | Shared with Prisma via `dev.db`; User, Roadmap, Task, Deadline|
+| Vector Store  | **ChromaDB** (Local)   | File-based vector storage for RAG context; separate from SQL |
+| LLM           | **OpenAI**             | gpt-4o-mini (Primary) + text-embedding-3-small (Embeddings)  |
+| Auth          | **NextAuth.js**        | Google + LinkedIn OIDC; JWT session strategy                |
+| Auth strategy | **JWT-only**           | FastAPI trusts NextAuth JWTs; no session lookups in backend  |
 
 ---
 
@@ -36,11 +36,10 @@
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  PostgreSQL + pgvector (Supabase / Neon / Railway / RDS)         │
-│  • Relational tables: intake_profiles, plans, problems,          │
-│    upvotes, comments (no users table — user_id from JWT only)    │
-│  • Vector column: intake_profiles.embedding, optional            │
-│    problem embeddings later                                      │
+│  SQLite + ChromaDB (Local Files)                                │
+│  • Relational: User, Roadmap, Task, Deadline                    │
+│  • Vector: ChromaDB `roadmap_knowledge` collection              │
+│  • Ingested sources: curated roadmaps, roadmap.sh docs          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -166,7 +165,30 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 ---
 
-## 4. FastAPI service layout (suggested)
+## 4. AI & RAG Architecture (April 2026 Update)
+
+### 4.1 Knowledge Base & Retrieval
+The platform uses **Retrieval-Augmented Generation (RAG)** to ensure AI-generated roadmaps are grounded in professional standards (curated JSON + roadmap.sh documentation).
+
+- **Knowledge Base Manager**: `knowledge_base.py` handles ingestion of structured JSON and unstructured Markdown files.
+- **Chunking Strategy**: Recursive character splitting with `chunk_size=1000` for long-form docs; atomic task-level indexing for curated roadmaps.
+- **Retrieval**: Uses `similarity_search` to fetch the Top-5 most relevant context fragments based on user onboarding goals.
+
+### 4.2 Tradeoff: ChromaDB vs. pgvector
+| **Option** | **Decision** | **Reasoning** |
+| :-- | :-- | :-- |
+| **pgvector** | Deferred | Initially planned, but required transitioning the development SQLite DB to Postgres too early in the dev cycle. |
+| **ChromaDB** | **Selected** | **Simplicity & Speed**: File-based storage matches the SQLite developer experience. Allows for rapid iteration on embeddings without setting up database extensions or cloud vector infrastructure. |
+
+### 4.3 Generation Pipeline
+Located in `generator.py`, the pipeline uses a multi-stage prompt:
+1. **Context Injection**: Retrieves "Proven Patterns" from the Vector Store.
+2. **Personalization**: Maps user-specific role, level, and goals.
+3. **Feedback Loop**: During regeneration, a new `user_dislikes` signal is injected into the prompt to fix hallucination or misalignment.
+
+---
+
+## 5. FastAPI service layout
 
 ```
 backend/

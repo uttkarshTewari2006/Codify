@@ -61,6 +61,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name || user.email.split("@")[0],
           onboarded: user.onboarded,
+          isAdmin: user.isAdmin,
         };
       },
     }),
@@ -109,22 +110,26 @@ export const authOptions: NextAuthOptions = {
               token.user_id = dbUser.id;
               token.email = dbUser.email;
               token.onboarded = dbUser.onboarded;
+              token.isAdmin = dbUser.isAdmin;
             } else {
               // Fallback if DB lookup fails
               token.user_id = user.id;
               token.email = user.email ?? undefined;
               token.onboarded = false;
+              token.isAdmin = false;
             }
           } catch {
             token.user_id = user.id;
             token.email = user.email ?? undefined;
             token.onboarded = false;
+            token.isAdmin = false;
           }
         } else {
           // Credentials: user.id is already the Prisma cuid
           token.user_id = user.id;
           token.email = user.email ?? undefined;
           token.onboarded = (user as any).onboarded;
+          token.isAdmin = (user as any).isAdmin;
         }
       }
 
@@ -140,6 +145,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as { id?: string }).id = token.user_id as string;
         session.user.email = token.email ?? session.user.email ?? null;
         (session.user as any).onboarded = token.onboarded;
+        (session.user as any).isAdmin = token.isAdmin;
       }
       return session;
     },

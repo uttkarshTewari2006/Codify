@@ -22,6 +22,8 @@ Notes on how the Phase 1 MVP stack and product flow were chosen.
 ## Backend choice
 
 - **Next.js API vs FastAPI:** Next.js gives an all-TypeScript codebase; FastAPI is Python with better fit for ML/RAG and integrations. FastAPI is also quick to work with. **Chose FastAPI**
+- **Vector Store Choice (RAG):** Evaluated **pgvector** vs **ChromaDB**. Chose **ChromaDB** for development speed and zero-infra setup on Windows, allowing it to sit alongside the SQLite developer database.
+- **RAG vs Fine-tuning:** Chose a **RAG-first strategy**. RAG provides immediate grounding in curated roadmaps and `roadmap.sh` data without the cost and static nature of fine-tuning. User feedback ("Dislikes") is collected to build a high-quality dataset for Phase 2 fine-tuning.
 
 ---
 
@@ -43,9 +45,10 @@ Notes on how the Phase 1 MVP stack and product flow were chosen.
 | ------------- | ---------------------------------------------------------- |
 | Frontend      | **Next.js**                                                |
 | Backend       | **FastAPI** (Python)                                       |
-| Database      | **PostgreSQL + pgvector**                                  |
-| LLM           | **OpenAI**                                                 |
-| Auth          | **Email + OAuth** (Google + GitHub)                        |
-| Auth strategy | **Option B: JWT-only** (no session DB; FastAPI trusts JWT) |
+| Database      | **SQLite** (Shared with Prisma)                            |
+| LLM           | **OpenAI** (gpt-4o-mini)                                   |
+| RAG           | **ChromaDB** (Local)                                       |
+| Auth          | **Email + OAuth** (Google + LinkedIn)                      |
+| Auth strategy | **JWT-only** (no session DB; FastAPI trusts JWT)           |
 
-→ See **ARCHITECTURE.md** for schema, auth flow (NextAuth ↔ FastAPI), and service layout.
+→ See **ARCHITECTURE.md** for RAG patterns, feedback loop details, and schema.

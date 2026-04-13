@@ -14,6 +14,7 @@ class User(SQLModel, table=True):
     email: str
     name: Optional[str] = None
     onboarded: bool = False
+    isAdmin: bool = Field(default=False)
     roadmaps: List["Roadmap"] = Relationship(back_populates="user")
     deadlines: List["Deadline"] = Relationship(back_populates="user")
 
