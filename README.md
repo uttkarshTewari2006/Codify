@@ -12,11 +12,8 @@ Codify is an intelligent learning platform that solves the "paradox of choice" i
 
 ## 🎯 At a Glance 
 
-From a computer science student's perspective, there is a lot of
-information online regarding specific things I need to do in 
-order to pursue a career in tech. 
-
-In a world saturated with generic tutorials, **Codify** builds targeted paths. It doesn't just guess what you need; it retrieves proven patterns from expert-curated knowledge and maps them to your availability.
+From a computer science student's perspective, it is
+easy to get lost in a sea of information about breaking into tech. While generic tutorials offer a sea of noise, Codify builds targeted development paths. By mapping expert-curated patterns to your specific schedule, we replace guesswork with a high-fidelity roadmap tailored to your career goals
 
 ### Key Features
 - **AI Roadmap Orchestration**: Generates 2–4 week intensive plans using context from validated learning resources.
