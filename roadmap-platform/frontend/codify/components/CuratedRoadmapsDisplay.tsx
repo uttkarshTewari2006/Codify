@@ -13,7 +13,7 @@ interface CuratedTask {
   description: string;
   duration: string;
   type: string;
-  deliverables?: [string, boolean][];
+  deliverables?: Array<[string, boolean] | { title?: string; completed?: boolean } | string>;
   links?: string[];
 }
 
@@ -22,6 +22,13 @@ interface CuratedRoadmap {
   category: string;
   description: string;
   tasks: CuratedTask[];
+}
+
+function getDeliverableTitle(deliverable: CuratedTask["deliverables"] extends Array<infer T> ? T : never) {
+  if (typeof deliverable === "string") return deliverable;
+  if (Array.isArray(deliverable)) return deliverable[0];
+  if (deliverable && typeof deliverable === "object") return deliverable.title || "";
+  return "";
 }
 
 export function CuratedRoadmapsDisplay() {
@@ -161,7 +168,7 @@ export function CuratedRoadmapsDisplay() {
                           <p className="text-xs font-semibold text-zinc-500 mb-2">Deliverables:</p>
                           <ul className="text-xs text-zinc-300 space-y-1 pl-4 list-disc marker:text-zinc-700">
                             {task.deliverables.map((del, dIdx) => (
-                              <li key={dIdx}>{del[0]}</li>
+                              <li key={dIdx}>{getDeliverableTitle(del)}</li>
                             ))}
                           </ul>
                         </div>

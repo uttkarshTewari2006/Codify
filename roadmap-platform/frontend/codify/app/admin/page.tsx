@@ -10,17 +10,26 @@ import { Button } from "@/components/ui/button";
 import { 
     Database, 
     RefreshCw, 
-    MessageSquare, 
-    Activity, 
     ShieldCheck,
     Search,
     AlertCircle
 } from "lucide-react";
 
 interface RAGStats {
+    available?: boolean;
     total_chunks: number;
     collection_name: string;
     persist_directory: string;
+    error?: string;
+}
+
+interface RetrievalResult {
+    content: string;
+    metadata?: {
+        source?: string;
+        chunk?: number;
+        type?: string;
+    };
 }
 
 export default function AdminDashboard() {
@@ -29,8 +38,11 @@ export default function AdminDashboard() {
     const [stats, setStats] = useState<RAGStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [ingesting, setIngesting] = useState(false);
+    const [querying, setQuerying] = useState(false);
     const [testQuery, setTestQuery] = useState("");
-    const [testResults, setTestResults] = useState<any[]>([]);
+    const [testResults, setTestResults] = useState<RetrievalResult[]>([]);
+    const [queryError, setQueryError] = useState<string | null>(null);
+    const [actionMessage, setActionMessage] = useState<string | null>(null);
 
     useEffect(() => {
         if (sessionStatus === "loading") return;
@@ -47,24 +59,63 @@ export default function AdminDashboard() {
         try {
             const res = await fetchBackend("/admin/rag/stats");
             const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data?.detail || "Failed to fetch RAG stats.");
+            }
             setStats(data);
             setLoading(false);
         } catch (err) {
             console.error("Failed to fetch stats:", err);
+            setActionMessage(err instanceof Error ? err.message : "Failed to fetch RAG stats.");
             setLoading(false);
         }
     };
 
     const handleIngest = async () => {
         setIngesting(true);
+        setActionMessage(null);
         try {
-            await fetchBackend("/admin/rag/ingest", { method: "POST" });
+            const res = await fetchBackend("/admin/rag/ingest", { method: "POST" });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data?.detail || "Ingestion failed.");
+            }
             await fetchStats();
-            alert("Knowledge base ingestion successful!");
+            setActionMessage(data?.message || "Knowledge base ingestion successful.");
         } catch (err) {
-            alert("Ingestion failed.");
+            setActionMessage(err instanceof Error ? err.message : "Ingestion failed.");
         } finally {
             setIngesting(false);
+        }
+    };
+
+    const handleTestQuery = async () => {
+        const query = testQuery.trim();
+        if (!query) {
+            setQueryError("Enter a query to test retrieval.");
+            setTestResults([]);
+            return;
+        }
+
+        setQuerying(true);
+        setQueryError(null);
+        setActionMessage(null);
+
+        try {
+            const res = await fetchBackend("/admin/rag/query", {
+                method: "POST",
+                body: JSON.stringify({ query, top_k: 5 }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data?.detail || "Retrieval test failed.");
+            }
+            setTestResults(data?.results || []);
+        } catch (err) {
+            setTestResults([]);
+            setQueryError(err instanceof Error ? err.message : "Retrieval test failed.");
+        } finally {
+            setQuerying(false);
         }
     };
 
@@ -83,57 +134,50 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-6 mb-8">
-                    <Card className="p-6 bg-zinc-900/40 border-zinc-800">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-2 bg-indigo-500/10 rounded-lg">
-                                <Database className="w-5 h-5 text-indigo-400" />
-                            </div>
-                            <h3 className="font-semibold text-zinc-200">Knowledge Base</h3>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-2xl font-bold">{stats?.total_chunks || 0}</div>
-                            <div className="text-xs text-zinc-500 uppercase tracking-wider">Total Chunks Indexed</div>
-                        </div>
-                    </Card>
-
-                    <Card className="p-6 bg-zinc-900/40 border-zinc-800">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-2 bg-emerald-500/10 rounded-lg">
-                                <Activity className="w-5 h-5 text-emerald-400" />
-                            </div>
-                            <h3 className="font-semibold text-zinc-200">System Health</h3>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-2xl font-bold text-emerald-400">Healthy</div>
-                            <div className="text-xs text-zinc-500 uppercase tracking-wider">ChromaDB Status</div>
-                        </div>
-                    </Card>
-
-                    <Card className="p-6 bg-zinc-900/40 border-zinc-800">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-2 bg-amber-500/10 rounded-lg">
-                                <MessageSquare className="w-5 h-5 text-amber-400" />
-                            </div>
-                            <h3 className="font-semibold text-zinc-200">Feedback Signal</h3>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-2xl font-bold">12</div>
-                            <div className="text-xs text-zinc-500 uppercase tracking-wider">Recent Dislikes</div>
-                        </div>
-                    </Card>
-                </div>
-
                 <div className="grid md:grid-cols-2 gap-8">
                     {/* Management Section */}
                     <section className="space-y-6">
+                        <Card className="p-6 bg-zinc-900/40 border-zinc-800">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="p-2 bg-indigo-500/10 rounded-lg">
+                                    <Database className="w-5 h-5 text-indigo-400" />
+                                </div>
+                                <div>
+                                    <h2 className="font-semibold text-zinc-200">Knowledge Base</h2>
+                                    <p className="text-sm text-zinc-400">
+                                        {loading ? "Loading RAG stats..." : stats?.collection_name || "roadmap_knowledge"}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="text-3xl font-bold">{stats?.total_chunks ?? 0}</div>
+                                <div className="text-xs text-zinc-500 uppercase tracking-wider">Total Chunks Indexed</div>
+                                {stats?.persist_directory && (
+                                    <p className="text-xs text-zinc-500 break-all">
+                                        {stats.persist_directory}
+                                    </p>
+                                )}
+                                {stats?.error && (
+                                    <p className="text-sm text-amber-300 leading-relaxed">
+                                        {stats.error}
+                                    </p>
+                                )}
+                                {actionMessage && (
+                                    <p className="text-sm text-zinc-300 leading-relaxed">
+                                        {actionMessage}
+                                    </p>
+                                )}
+                            </div>
+                        </Card>
+
                         <h2 className="text-xl font-medium flex items-center gap-2">
                             <RefreshCw className="w-5 h-5 text-indigo-500" />
                             Knowledge Ingestion
                         </h2>
                         <Card className="p-6 bg-zinc-900/20 border-zinc-800 border-dashed">
                             <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
-                                Synchronize the vector database with the latest curated roadmaps and knowledge documents from roadmap.sh derived sources.
+                                Rebuild the vector index from markdown knowledge documents in <code className="text-zinc-300">backend/seed_data/knowledge</code> using the configured OpenAI embedding model.
                             </p>
                             <Button 
                                 onClick={handleIngest} 
@@ -145,25 +189,6 @@ export default function AdminDashboard() {
                                 ) : "Trigger Re-index"}
                             </Button>
                         </Card>
-
-                        <h2 className="text-xl font-medium flex items-center gap-2">
-                            <AlertCircle className="w-5 h-5 text-rose-500" />
-                            User Dislikes Feed
-                        </h2>
-                        <div className="space-y-3">
-                            {[
-                                "Too much focus on Java, I wanted Python.",
-                                "Missing links for the first 3 modules.",
-                                "Duration estimates are way too optimistic."
-                            ].map((msg, i) => (
-                                <Card key={i} className="p-4 bg-zinc-900/40 border-zinc-800">
-                                    <div className="flex gap-4">
-                                        <div className="text-xs font-bold text-rose-500 px-2 py-1 bg-rose-500/10 rounded h-fit">REGEN</div>
-                                        <p className="text-sm text-zinc-300">"{msg}"</p>
-                                    </div>
-                                </Card>
-                            ))}
-                        </div>
                     </section>
 
                     {/* Test Retrieval Section */}
@@ -180,15 +205,54 @@ export default function AdminDashboard() {
                                     className="flex-1 bg-zinc-950 border border-zinc-800 rounded-md px-4 text-sm focus:outline-none focus:border-indigo-500"
                                     value={testQuery}
                                     onChange={(e) => setTestQuery(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            void handleTestQuery();
+                                        }
+                                    }}
                                 />
-                                <Button variant="secondary" className="h-10 bg-zinc-800 text-zinc-200 hover:bg-zinc-700">Test</Button>
+                                <Button
+                                    variant="secondary"
+                                    className="h-10 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                                    onClick={() => void handleTestQuery()}
+                                    disabled={querying}
+                                >
+                                    {querying ? (
+                                        <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Testing...</>
+                                    ) : "Test"}
+                                </Button>
                             </div>
                             
                             <div className="space-y-4">
                                 <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Retrieved Context Chunks</div>
-                                <div className="p-4 border border-zinc-800 rounded-md bg-zinc-950/50 text-xs text-zinc-400 italic">
-                                    No chunks retrieved yet. Use the test bar above.
-                                </div>
+                                {queryError ? (
+                                    <div className="p-4 border border-rose-900 rounded-md bg-rose-950/20 text-sm text-rose-300">
+                                        <div className="flex items-start gap-2">
+                                            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                                            <span>{queryError}</span>
+                                        </div>
+                                    </div>
+                                ) : testResults.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {testResults.map((result, index) => (
+                                            <div key={`${result.metadata?.source || "chunk"}-${index}`} className="p-4 border border-zinc-800 rounded-md bg-zinc-950/50">
+                                                <div className="flex items-center gap-2 mb-2 text-[11px] uppercase tracking-widest text-zinc-500">
+                                                    <span>{result.metadata?.source || "Unknown source"}</span>
+                                                    {typeof result.metadata?.chunk === "number" && (
+                                                        <span>Chunk {result.metadata.chunk}</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                                                    {result.content}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-4 border border-zinc-800 rounded-md bg-zinc-950/50 text-xs text-zinc-400 italic">
+                                        No chunks retrieved yet. Use the test bar above.
+                                    </div>
+                                )}
                             </div>
                         </Card>
                     </section>

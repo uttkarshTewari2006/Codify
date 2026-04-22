@@ -10,17 +10,19 @@ import { RoadmapSkeleton } from "@/components/RoadmapSkeleton";
 export default function GeneratePage() {
     const router = useRouter();
     const [generating, setGenerating] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const handleComplete = async (data: any) => {
+        setErrorMessage(null);
         setGenerating(true);
         try {
             const genRes = await fetchBackend("/generate-plan", {
                 method: "POST",
                 body: JSON.stringify(data),
             });
+            const genData = await genRes.json().catch(() => null);
 
             if (genRes.ok) {
-                const genData = await genRes.json();
                 if (genData.roadmap_id) {
                     // Start collision check logic
                     try {
@@ -63,12 +65,15 @@ export default function GeneratePage() {
                     router.push("/dashboard");
                 }
             } else {
-                console.error("Failed to generate AI plan");
-                router.push("/dashboard");
+                const detail = genData?.detail || genData?.error || "Failed to generate AI plan.";
+                console.error("Failed to generate AI plan:", detail);
+                setErrorMessage(detail);
             }
         } catch (error) {
             console.error("Error generating plan:", error);
-            router.push("/dashboard");
+            setErrorMessage("Could not reach the roadmap generator.");
+        } finally {
+            setGenerating(false);
         }
     };
 
@@ -91,6 +96,13 @@ export default function GeneratePage() {
 
     return (
         <div className="min-h-screen bg-zinc-950 font-sans pb-12">
+            {errorMessage && (
+                <div className="mx-auto max-w-4xl px-6 pt-6">
+                    <div className="rounded-md border border-rose-900 bg-rose-950/30 px-4 py-3 text-sm text-rose-200">
+                        {errorMessage}
+                    </div>
+                </div>
+            )}
             <Onboarding onComplete={handleComplete} />
         </div>
     );

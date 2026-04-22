@@ -6,64 +6,117 @@
 [![LangChain](https://img.shields.io/badge/LangChain-0.1-121212?logo=langchain)](https://langchain.com/)
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-VectorStore-333333)](https://www.trychroma.com/)
 
-Codify is an intelligent learning platform that solves the "paradox of choice" in technical education. It leverages **Retrieval-Augmented Generation (RAG)** to create hyper-personalized learning roadmaps based on a user's specific goals, level, and feedback, grounded in professional industry standards.
+Codify is an AI learning platform that generates personalized technical roadmaps from a user's goals, weaknesses, timeline, and target role. It uses a Next.js frontend, a FastAPI backend, and a Retrieval-Augmented Generation (RAG) layer so roadmap generation is grounded in curated knowledge instead of relying only on prompt-only generation.
 
 ---
 
-## 🎯 At a Glance 
+## Overview
 
-From a computer science student's perspective, it is
-easy to get lost in a sea of information about breaking into tech. While generic tutorials offer a sea of noise, Codify builds targeted development paths. By mapping expert-curated patterns to your specific schedule, we replace guesswork with a high-fidelity roadmap tailored to your career goals
+Breaking into software engineering is noisy. There are too many tutorials, too many roadmaps, and too much generic advice. Codify reduces that noise by turning onboarding inputs into structured learning plans that are specific to the user.
 
 ### Key Features
-- **AI Roadmap Orchestration**: Generates 2–4 week intensive plans using context from validated learning resources.
-- **Dynamic Task Management**: Progress tracking with automated deadline management and AI-assisted task breakdowns.
-- **Enterprise-Grade Auth**: Secure onboarding via LinkedIn OIDC and Google OAuth.
-- **Expert-Curated Library**: Hybrid system combining community-vetted "stable" roadmaps with AI flexibility.
-- **Iterative Feedback Loop**: Users can signal "too hard" or "don't like this topic" to live-regenerate their path without losing progress.
+- **AI roadmap generation**: Creates personalized study plans from onboarding data.
+- **RAG grounding**: Retrieves embedded knowledge before generation to improve specificity.
+- **Task management**: Supports roadmap editing, task tracking, and deadlines.
+- **Curated roadmaps**: Lets users fork prebuilt roadmap templates into their own dashboard.
+- **Regeneration loop**: Regenerates plans using user feedback while preserving overall structure.
 
 ---
 
-## 🛠 Technical Deep Dive 
+## Architecture
 
-### System Architecture
-Codify is built as a decoupled **Next.js frontend** and **FastAPI backend**, communicating via a JWT-only security model to minimize database round-trips and maximize scalability.
+Codify is split into a **Next.js frontend** and **FastAPI backend**, with authenticated requests proxied from the frontend to the backend.
 
 ```mermaid
 graph TD
-    A[Next.js App Router] -->|JWT Auth| B[FastAPI API]
-    B -->|PGVector/Chroma| C[Vector Store - RAG]
-    B -->|Prisma| D[SQLite/Postgres - Relational]
-    B -->|Orchestrator| E[LLM - GPT-4o-mini]
-    C -->|Grounding Context| E
-    E -->|Structured JSON| B
+    A[Next.js App Router] -->|JWT Auth Proxy| B[FastAPI API]
+    B -->|SQLModel / Prisma DB| C[SQLite / Postgres]
+    B -->|ChromaDB| D[Vector Store]
+    B -->|LLM Calls| E[OpenAI]
+    D -->|Retrieved Context| E
+    E -->|Structured JSON Tasks| B
 ```
 
-### The RAG Pipeline
-Unlike "vibe-coded" AI wrappers, Codify grounds its generations:
-- **Vector Store**: Uses **ChromaDB** for local development speed, indexing curated JSON and Markdown documentation from sources like roadmap.sh.
-- **Personalization Engine**: The backend orchestrator fetches the Top-5 most relevant context fragments based on user intake data (*level, role target, timeline*) before calling the LLM.
-- **Constraint Handling**: Injects user-dislike signals and real-time community upvotes/difficulty tags into the prompt to prevent hallucination.
-
-### Key Engineering Decisions
-- **JWT-Only Auth Flow**: The FastAPI backend contains no `users` table. It trusts signed NextAuth JWTs, significantly reducing backend complexity and making high-concurrency state management more resilient.
-- **Shared Schema (frontend/backend)**: Prisma logic is shared between the SQLite dev environment and the eventual Postgres production environment, ensuring schema consistency across the stack.
-- **Dual-Stack Testing**: 
-    - **Frontend**: Vitest for unit logic + Playwright for E2E browser automation.
-    - **Backend**: Pytest with `respx` for deterministic LLM mocking, ensuring CI/CD passes without calling expensive external APIs.
+### Core Engineering Decisions
+- **JWT-based backend auth**: FastAPI trusts signed tokens from the NextAuth layer instead of maintaining a separate backend auth implementation.
+- **Shared development database**: Frontend and backend work against the same local SQLite database in development.
+- **Deterministic backend testing**: `pytest` and `respx` are used to mock model calls and verify backend behavior without relying on live LLM responses.
 
 ---
 
-## 🚀 Getting Started
+## RAG System
+
+### What gets embedded
+The RAG layer indexes curated markdown knowledge documents from:
+
+- `roadmap-platform/backend/seed_data/knowledge`
+
+These documents are chunked and embedded into ChromaDB using OpenAI embeddings.
+
+### Embedded status
+- **Knowledge base status**: embedded
+- **Indexed chunk count**: **48 chunks**
+- **Embedding model**: `text-embedding-3-small`
+- **Vector store**: ChromaDB
+
+### How ingestion works
+The admin `Trigger Re-index` action maps to:
+
+- `POST /admin/rag/ingest`
+
+That route calls `kb.ingest_knowledge_docs()` in `roadmap-platform/backend/knowledge_base.py`, which:
+
+1. Reads markdown files from `seed_data/knowledge`
+2. Splits them into chunks with `RecursiveCharacterTextSplitter`
+3. Embeds those chunks with OpenAI embeddings
+4. Stores them in ChromaDB for retrieval during roadmap generation and regeneration
+
+### Retrieval behavior
+When roadmap generation runs with RAG enabled, the backend retrieves relevant knowledge chunks before sending the final prompt to the model. That retrieved context is then used to ground the roadmap in concrete technical material rather than broad generic patterns.
+
+### Validation strategy
+RAG quality is validated in two layers:
+
+- **Retrieval validation**: `roadmap-platform/backend/scripts/validate_rag_quality.py` runs representative queries, retrieves top chunks, and evaluates them with an LLM judge on:
+  - relevance
+  - depth
+  - noise
+- **Manual product validation**: generated plans are compared with and without retrieval grounding to check whether outputs actually reflect the user’s stated role, weaknesses, and prep goals.
+
+This gives both a technical validation path and a practical product-quality check.
+
+### With RAG vs without RAG
+The quality difference was clear during testing.
+
+Without RAG:
+- the roadmap generator produced generic advice
+- output was broad and not tightly connected to the specific onboarding input
+- recommendations felt like generic interview-prep suggestions rather than a targeted plan
+
+With RAG:
+- the output became much more specific
+- when the input said the user was interested in **frontend** and weak in **data structures and algorithms**, the roadmap focused on:
+  - HTML
+  - CSS
+  - JavaScript
+  - data structures
+  - algorithms
+- instead of random generic advice, the generated roadmap included more detailed guidance on what to prepare, which guides to study, and which kinds of projects to prioritize
+
+In practice, RAG moved the system from “reasonable but generic” to “grounded and clearly aligned with the user’s input.”
+
+---
+
+## Getting Started
 
 ### Prerequisites
 - Node.js 20+
 - Python 3.11+
-- OpenAI API Key
+- OpenAI API key
 
 ### Installation
 
-1. **Clone & Install Frontend**
+1. **Frontend**
    ```bash
    cd roadmap-platform/frontend/codify
    npm install
@@ -71,39 +124,49 @@ Unlike "vibe-coded" AI wrappers, Codify grounds its generations:
    npm run dev
    ```
 
-2. **Setup Backend**
+2. **Backend**
    ```bash
    cd roadmap-platform/backend
    python -m venv venv
-   source venv/bin/activate  # venv\Scripts\activate on Windows
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    pip install -r requirements.txt
    python main.py
    ```
 
-3. **Environment Variables**
-   Ensure `.env` files are configured in both `frontend/codify` and `backend` (see `.env.example` in each directory).
+3. **Environment variables**
+   Configure `.env` files in:
+- `roadmap-platform/frontend/codify`
+- `roadmap-platform/backend`
 
 ---
 
-## 🧪 Testing Suite
+## Testing
 
-We maintain high code quality through rigorous automated testing:
-
+### Frontend
 ```bash
-# Run Frontend Tests
-npm test                # Vitest
-npx playwright test     # E2E
+npm test
+npx playwright test
+```
 
-# Run Backend Tests
-pytest                  # Backend Unit/Integration
+### Backend
+```bash
+pytest
+```
+
+### RAG validation
+```bash
+cd roadmap-platform/backend
+venv\Scripts\python.exe scripts\validate_rag_quality.py
 ```
 
 ---
 
-## 📈 Roadmap & Future
-- [ ] Transition from ChromaDB to **pgvector** for production scalability.
-- [ ] Implement local-first offline syncing for task tracking.
-- [ ] Integrated "AI Mentor" chat bot with per-task memory.
+## Future Work
+- Transition from ChromaDB to `pgvector` for production retrieval.
+- Expand the knowledge corpus beyond the current seeded markdown docs.
+- Add richer retrieval debugging and admin evaluation tooling.
+- Introduce per-user memory and roadmap evolution over time.
 
 ---
-*Developed with a focus on engineering rigor, scalability, and deterministic AI output.*
+
+Developed with a focus on practical AI grounding, roadmap specificity, and engineering simplicity.

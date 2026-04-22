@@ -1,9 +1,6 @@
 import os
 import json
 from typing import List, Dict, Optional
-from langchain_openai import OpenAIEmbeddings
-from langchain_chroma import Chroma
-from langchain_core.documents import Document
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,35 +8,53 @@ load_dotenv()
 class KnowledgeBase:
     def __init__(self, persist_directory: str = "./chroma_db"):
         self.persist_directory = persist_directory
-        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
         self.collection_name = "roadmap_knowledge"
-        
-        # Initialize the vector store
-        self.vector_store = Chroma(
-            collection_name=self.collection_name,
-            embedding_function=self.embeddings,
-            persist_directory=self.persist_directory
-        )
+        self.embeddings = None
+        self.vector_store = None
+        self._init_error = None
+
+        try:
+            from langchain_openai import OpenAIEmbeddings
+            from langchain_chroma import Chroma
+        except ImportError as exc:
+            self._init_error = (
+                "Knowledge base dependencies are missing. Install "
+                "'langchain-chroma' and 'langchain-text-splitters' to enable RAG-backed features."
+            )
+            print(f"[KnowledgeBase] Disabled: {exc}")
+            return
+
+        try:
+            self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+            self.vector_store = Chroma(
+                collection_name=self.collection_name,
+                embedding_function=self.embeddings,
+                persist_directory=self.persist_directory
+            )
+        except Exception as exc:
+            self._init_error = f"Knowledge base initialization failed: {exc}"
+            print(f"[KnowledgeBase] {self._init_error}")
+
+    def is_available(self) -> bool:
+        return self.vector_store is not None
+
+    def get_unavailable_reason(self) -> str:
+        return self._init_error or "Knowledge base is unavailable."
 
     def ingest_knowledge_docs(self, docs_dir: Optional[str] = None):
         """
         Parses markdown files in the docs_dir and adds them to ChromaDB.
         Uses recursive character splitting for better context preservation.
         """
+        if not self.is_available():
+            raise RuntimeError(self.get_unavailable_reason())
+
+        from langchain_core.documents import Document
         from langchain_text_splitters import RecursiveCharacterTextSplitter
-        
+
         if docs_dir is None:
             docs_dir = os.path.join(os.path.dirname(__file__), "seed_data", "knowledge")
-            
-        if not os.path.exists(docs_dir):
-            print(f"Docs directory not found: {docs_dir}")
-            return
-        """
-        Parses markdown files in the docs_dir and adds them to ChromaDB.
-        Uses recursive character splitting for better context preservation.
-        """
-        from langchain_text_splitters import RecursiveCharacterTextSplitter
-        
+
         if not os.path.exists(docs_dir):
             print(f"Docs directory not found: {docs_dir}")
             return
@@ -77,8 +92,11 @@ class KnowledgeBase:
         """
         Queries the vector store for the most relevant tasks/concepts.
         """
+        if not self.is_available():
+            return []
+
         results = self.vector_store.similarity_search(query_text, k=top_k)
-        
+
         formatted_results = []
         for doc in results:
             formatted_results.append({
@@ -91,12 +109,21 @@ class KnowledgeBase:
         """
         Returns stats about the vector store for the admin dashboard.
         """
+        if not self.is_available():
+            return {
+                "available": False,
+                "error": self.get_unavailable_reason(),
+                "collection_name": self.collection_name,
+                "persist_directory": self.persist_directory
+            }
+
         try:
             # Note: chroma collection counts can be obtained via the client 
             # but langchain wrapper doesn't expose it directly in a standard way
             # We will use the underlying collection directly
             count = self.vector_store._collection.count()
             return {
+                "available": True,
                 "total_chunks": count,
                 "collection_name": self.collection_name,
                 "persist_directory": self.persist_directory

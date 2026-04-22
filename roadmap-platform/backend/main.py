@@ -18,6 +18,18 @@ import json
 app = FastAPI()
 kb = KnowledgeBase()
 
+
+def ensure_kb_available(feature_name: str) -> None:
+    if kb.is_available():
+        return
+
+    detail = (
+        f"{feature_name} is unavailable because the knowledge base failed to initialize. "
+        f"{kb.get_unavailable_reason()}"
+    )
+    print(f"[RAG Unavailable] {detail}")
+    raise HTTPException(status_code=503, detail=detail)
+
 # Secure Admin Dependency
 def get_current_admin(
     user_id: str = Depends(get_user_id),
@@ -68,6 +80,13 @@ def format_deliverables(deliverables):
     return formatted
 
 
+def normalize_task(task: Task) -> Task:
+    """Ensures task JSON fields use the standard API shape before returning them."""
+    task.deliverables = format_deliverables(task.deliverables)
+    task.links = task.links or []
+    return task
+
+
 @app.get("/")
 def read_root():
     return {"message": "Roadmap API is alive!"}
@@ -85,6 +104,7 @@ def generate_plan(
     2. Saves a new Roadmap and its Tasks to the database
     3. Returns the generated plan
     """
+    ensure_kb_available("Roadmap generation")
     try:
         # Check if user exists in DB
         user = session.exec(select(User).where(User.id == user_id)).first()
@@ -95,7 +115,7 @@ def generate_plan(
             session.commit()
 
         # Generate tasks
-        tasks_data = generate_roadmap_tasks(onboarding_data)
+        tasks_data = generate_roadmap_tasks(onboarding_data, knowledge_base=kb)
         
         # Create Roadmap
         target_role = onboarding_data.get('targetRole', 'Custom')
@@ -151,6 +171,7 @@ def regenerate_plan(
     if not roadmap:
         raise HTTPException(status_code=404, detail="Roadmap not found")
 
+    ensure_kb_available("Roadmap regeneration")
     try:
         # Generate new tasks based on existing dashboard and feedback
         # Pass feedback as user_dislikes to the generator
@@ -231,6 +252,9 @@ def get_roadmap_details(
     tasks = session.exec(
         select(Task).where(Task.roadmapId == roadmap_id).order_by(Task.order)
     ).all()
+
+    for task in tasks:
+        normalize_task(task)
     
     return {"roadmap": roadmap, "tasks": tasks}
 
@@ -249,8 +273,8 @@ def get_task_details(
     task = session.exec(select(Task).where(Task.id == task_id, Task.roadmapId == roadmap_id)).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-        
-    return task
+
+    return normalize_task(task)
 
 @app.get("/tracks")
 def get_tracks():
@@ -303,7 +327,7 @@ def fork_curated_roadmap(
                 duration=t.get("duration", ""),
                 type=t.get("type", "info"),
                 order=i,
-                deliverables=t.get("deliverables", []),
+                deliverables=format_deliverables(t.get("deliverables", [])),
                 links=t.get("links", []),
                 roadmapId=new_roadmap_id
             )
@@ -731,8 +755,41 @@ def get_rag_stats(admin: User = Depends(get_current_admin)):
 @app.post("/admin/rag/ingest")
 def ingest_knowledge(admin: User = Depends(get_current_admin)):
     """Protected: triggers knowledge document ingestion."""
+    ensure_kb_available("Knowledge ingestion")
     kb.ingest_knowledge_docs()
     return {"message": "Knowledge document ingestion triggered successfully"}
+
+@app.post("/admin/rag/query")
+def query_rag(
+    payload: dict,
+    admin: User = Depends(get_current_admin)
+):
+    """Protected: runs a retrieval-only query against the knowledge base."""
+    ensure_kb_available("Retrieval playground")
+
+    query_text = (payload.get("query") or "").strip()
+    top_k = payload.get("top_k", 5)
+
+    if not query_text:
+        raise HTTPException(status_code=400, detail="Query text is required")
+
+    try:
+        top_k = int(top_k)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="top_k must be an integer")
+
+    top_k = max(1, min(top_k, 10))
+
+    try:
+        results = kb.query(query_text, top_k=top_k)
+        return {
+            "query": query_text,
+            "top_k": top_k,
+            "results": results,
+        }
+    except Exception as e:
+        print(f"Error querying knowledge base: {e}")
+        raise HTTPException(status_code=500, detail="Failed to query knowledge base")
 
 @app.get("/admin/feedback")
 def get_feedback_logs(
