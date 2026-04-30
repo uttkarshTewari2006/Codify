@@ -1,15 +1,14 @@
 import { getToken } from "next-auth/jwt";
-import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
+import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET ?? ""
-);
+const API_BASE = process.env.BACKEND_API_URL ?? "http://localhost:8000";
+const SHARED_AUTH_SECRET = process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET ?? "";
+const JWT_SECRET = new TextEncoder().encode(SHARED_AUTH_SECRET);
 
 /**
- * Proxy to FastAPI: adds Authorization Bearer JWT (signed with user_id from session)
- * so FastAPI can authenticate the user. Call from client as fetch('/api/backend/tracks') etc.
+ * Proxy all browser-originated backend traffic through Next.js so the frontend
+ * can stay on one public origin while the backend URL remains internal.
  */
 export async function GET(
   req: NextRequest,
@@ -68,8 +67,8 @@ async function proxyWithAuth(
         .setExpirationTime("1h")
         .sign(JWT_SECRET);
       authHeader = `Bearer ${jwt}`;
-    } catch (e) {
-      console.error("[Proxy] JWT Signing Error:", e);
+    } catch (error) {
+      console.error("[Proxy] JWT signing error:", error);
     }
   }
 
@@ -84,7 +83,7 @@ async function proxyWithAuth(
       const body = await req.text();
       if (body) init.body = body;
     } catch {
-      // no body
+      // No request body.
     }
   }
 
@@ -93,10 +92,14 @@ async function proxyWithAuth(
     const data = await res.text();
     return new NextResponse(data, {
       status: res.status,
-      headers: { "Content-Type": res.headers.get("Content-Type") ?? "application/json" },
+      headers: {
+        "Content-Type": res.headers.get("Content-Type") ?? "application/json",
+      },
     });
   } catch (error) {
-    console.error("[Proxy] Fetch Error:", error);
-    return new NextResponse(JSON.stringify({ error: "Backend unavailable" }), { status: 502 });
+    console.error("[Proxy] Fetch error:", error);
+    return new NextResponse(JSON.stringify({ error: "Backend unavailable" }), {
+      status: 502,
+    });
   }
 }

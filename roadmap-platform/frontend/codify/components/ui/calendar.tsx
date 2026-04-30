@@ -12,20 +12,22 @@ const MONTHS = [
 interface CalendarProps {
   selected?: Date | null;
   onSelect: (date: Date) => void;
-  /** Dates before this are disabled (defaults to today) */
   minDate?: Date;
 }
 
 export function Calendar({ selected, onSelect, minDate }: CalendarProps) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = useMemo(() => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
 
   const effectiveMin = useMemo(() => {
     if (!minDate) return today;
     const d = new Date(minDate);
     d.setHours(0, 0, 0, 0);
     return d;
-  }, [minDate]);
+  }, [minDate, today]);
 
   const [viewMonth, setViewMonth] = useState(selected?.getMonth() ?? today.getMonth());
   const [viewYear, setViewYear] = useState(selected?.getFullYear() ?? today.getFullYear());
@@ -80,16 +82,13 @@ export function Calendar({ selected, onSelect, minDate }: CalendarProps) {
     return prevDate >= minMonth;
   };
 
-  // Build the grid cells
   const cells: (number | null)[] = [];
   for (let i = 0; i < startDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-  // Pad end to fill last row
   while (cells.length % 7 !== 0) cells.push(null);
 
   return (
     <div className="select-none">
-      {/* Header */}
       <div className="flex items-center justify-between mb-3 px-1">
         <button
           type="button"
@@ -111,7 +110,6 @@ export function Calendar({ selected, onSelect, minDate }: CalendarProps) {
         </button>
       </div>
 
-      {/* Day-of-week headers */}
       <div className="grid grid-cols-7 mb-1">
         {DAYS.map((d) => (
           <div key={d} className="text-center text-[11px] font-medium text-zinc-500 py-1">
@@ -120,7 +118,6 @@ export function Calendar({ selected, onSelect, minDate }: CalendarProps) {
         ))}
       </div>
 
-      {/* Date grid */}
       <div className="grid grid-cols-7 gap-0.5">
         {cells.map((day, i) => {
           if (day === null) {

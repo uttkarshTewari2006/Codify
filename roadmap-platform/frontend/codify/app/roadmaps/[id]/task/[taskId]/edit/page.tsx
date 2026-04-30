@@ -56,7 +56,7 @@ export default function TaskEditPage({ params }: { params: Promise<{ id: string;
                     
                     if (data.deliverables) {
                         const items = Array.isArray(data.deliverables) 
-                            ? data.deliverables.map((d: any) => typeof d === 'string' ? d : d.title) 
+                            ? data.deliverables.map((d) => d.title)
                             : [];
                         setDeliverables(items);
                     }

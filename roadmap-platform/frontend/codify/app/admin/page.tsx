@@ -48,7 +48,7 @@ export default function AdminDashboard() {
         if (sessionStatus === "loading") return;
 
         // Redirect if not logged in or not an admin
-        if (!session || !(session.user as any).isAdmin) {
+        if (!session || !session.user?.isAdmin) {
             router.push("/dashboard");
         } else {
             fetchStats();

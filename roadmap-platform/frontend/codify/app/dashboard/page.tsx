@@ -18,10 +18,8 @@ import {
     TrendingUp,
     Settings,
     LogOut,
-    Layout,
     Trash2,
     Calendar,
-    MoreVertical,
     Pencil
 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -46,13 +44,10 @@ export default function DashboardPage() {
     const [isDeadlineModalOpen, setIsDeadlineModalOpen] = useState(false);
     const [editDeadline, setEditDeadline] = useState<Deadline | null>(null);
 
-    useEffect(() => {
-        fetchRoadmaps();
-        fetchDeadlines();
-    }, []);
-
-    const fetchRoadmaps = () => {
-        setLoading(true);
+    function fetchRoadmaps(showLoading = true) {
+        if (showLoading) {
+            setLoading(true);
+        }
         fetchBackend("/roadmaps")
             .then((res) => res.json())
             .then((data) => {
@@ -63,16 +58,36 @@ export default function DashboardPage() {
                 console.error("Error fetching roadmaps:", err);
                 setLoading(false);
             });
-    };
+    }
 
-    const fetchDeadlines = () => {
+    function fetchDeadlines() {
         fetchBackend("/deadlines")
             .then((res) => res.json())
             .then((data) => {
                 setDeadlines(Array.isArray(data) ? data : []);
             })
             .catch((err) => console.error("Error fetching deadlines:", err));
-    };
+    }
+
+    useEffect(() => {
+        fetchBackend("/roadmaps")
+            .then((res) => res.json())
+            .then((data) => {
+                setRoadmaps(Array.isArray(data) ? data : []);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error("Error fetching roadmaps:", err);
+                setLoading(false);
+            });
+
+        fetchBackend("/deadlines")
+            .then((res) => res.json())
+            .then((data) => {
+                setDeadlines(Array.isArray(data) ? data : []);
+            })
+            .catch((err) => console.error("Error fetching deadlines:", err));
+    }, []);
 
     const handleDeleteRoadmap = async (id: string) => {
         if (!confirm("Are you sure you want to delete this roadmap and all its tasks?")) return;

@@ -1,17 +1,17 @@
 "use client";
 
-import { Onboarding } from "@/components/Onboarding";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Onboarding, type OnboardingData } from "@/components/Onboarding";
 import { fetchBackend } from "@/lib/api";
-import { useState } from "react";
 
 export default function OnboardingPage() {
     const router = useRouter();
     const { update } = useSession();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const handleComplete = async (data: any) => {
+    const handleComplete = async (data: OnboardingData) => {
         console.log("Onboarding complete:", data);
         setErrorMessage(null);
 
@@ -23,10 +23,8 @@ export default function OnboardingPage() {
             });
 
             if (res.ok) {
-                // Update session to reflect onboarded status
                 await update({ onboarded: true });
 
-                // Trigger AI Roadmap Generation (Backend)
                 try {
                     console.log("Triggering AI roadmap generation...");
                     const genRes = await fetchBackend("/generate-plan", {

@@ -1,6 +1,7 @@
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
+import os
 import uuid
 from dotenv import load_dotenv
 
@@ -9,10 +10,9 @@ load_dotenv()
 
 from datetime import datetime
 from auth import get_user_id
-from database import engine, Roadmap, Task, User, Deadline, get_session
+from database import Roadmap, Task, User, Deadline, get_session
 from generator import generate_roadmap_tasks, regenerate_roadmap_tasks
 from knowledge_base import KnowledgeBase
-from sqlalchemy.orm import Session as ORMSession
 import json
 
 app = FastAPI()
@@ -30,6 +30,11 @@ def ensure_kb_available(feature_name: str) -> None:
     print(f"[RAG Unavailable] {detail}")
     raise HTTPException(status_code=503, detail=detail)
 
+
+def get_cors_origins() -> list[str]:
+    raw_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000")
+    return [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+
 # Secure Admin Dependency
 def get_current_admin(
     user_id: str = Depends(get_user_id),
@@ -46,9 +51,7 @@ def get_current_admin(
 # Allow frontend to talk to backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Next.js dev
-    ],
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

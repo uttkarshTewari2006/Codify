@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { X, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Calendar } from "./ui/calendar";
-import { X, Calendar as CalendarIcon, Clock } from "lucide-react";
 import { fetchBackend } from "@/lib/api";
 
 interface Deadline {
@@ -43,7 +43,6 @@ function DatePickerField({ value, onChange }: { value: string; onChange: (v: str
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Close when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -84,7 +83,6 @@ function DatePickerField({ value, onChange }: { value: string; onChange: (v: str
           <Calendar
             selected={selectedDate}
             onSelect={(d) => {
-              // Format as YYYY-MM-DD
               const yyyy = d.getFullYear();
               const mm = String(d.getMonth() + 1).padStart(2, "0");
               const dd = String(d.getDate()).padStart(2, "0");
@@ -116,7 +114,7 @@ export function DeadlineModal({ isOpen, onClose, onSuccess, editDeadline }: Dead
       if (editDeadline) {
         setTitle(editDeadline.title);
         setDescription(editDeadline.description || "");
-        setTargetDate(new Date(editDeadline.targetDate).toISOString().split('T')[0]);
+        setTargetDate(new Date(editDeadline.targetDate).toISOString().split("T")[0]);
         setType(editDeadline.type);
         setRoadmapId(editDeadline.roadmapId || "");
         setTaskId(editDeadline.taskId || "");
@@ -130,7 +128,7 @@ export function DeadlineModal({ isOpen, onClose, onSuccess, editDeadline }: Dead
         setTaskId("");
         setDeliverableId(-1);
       }
-      fetchOwnedRoadmaps();
+      void fetchOwnedRoadmaps();
     }
   }, [isOpen, editDeadline]);
 
@@ -147,9 +145,9 @@ export function DeadlineModal({ isOpen, onClose, onSuccess, editDeadline }: Dead
   useEffect(() => {
     if (roadmapId) {
       fetchBackend(`/roadmaps/${roadmapId}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.tasks) setTasks(data.tasks);
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.tasks) setTasks(data.tasks);
         });
     } else {
       setTasks([]);
@@ -167,9 +165,9 @@ export function DeadlineModal({ isOpen, onClose, onSuccess, editDeadline }: Dead
       description,
       targetDate: new Date(targetDate).toISOString(),
       type,
-      roadmapId: type === 'roadmap' || type === 'task' || type === 'deliverable' ? roadmapId : null,
-      taskId: type === 'task' || type === 'deliverable' ? taskId : null,
-      deliverableId: type === 'deliverable' ? (deliverableId >= 0 ? deliverableId : null) : null,
+      roadmapId: type === "roadmap" || type === "task" || type === "deliverable" ? roadmapId : null,
+      taskId: type === "task" || type === "deliverable" ? taskId : null,
+      deliverableId: type === "deliverable" ? (deliverableId >= 0 ? deliverableId : null) : null,
     };
 
     try {
@@ -235,8 +233,8 @@ export function DeadlineModal({ isOpen, onClose, onSuccess, editDeadline }: Dead
               </div>
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium text-zinc-300">Track Item</Label>
-                <select 
-                   value={type} 
+                <select
+                   value={type}
                    onChange={(e) => setType(e.target.value)}
                    className="w-full bg-zinc-950 border border-zinc-800 rounded-md h-10 px-3 text-sm focus:border-indigo-500 outline-none text-zinc-100"
                 >
@@ -248,44 +246,44 @@ export function DeadlineModal({ isOpen, onClose, onSuccess, editDeadline }: Dead
               </div>
             </div>
 
-            {type !== 'general' && (
+            {type !== "general" && (
               <div className="space-y-4 p-4 rounded-md bg-zinc-950/50 border border-zinc-800/50">
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium text-zinc-400">Select Roadmap</Label>
-                  <select 
-                     value={roadmapId} 
+                  <select
+                     value={roadmapId}
                      onChange={(e) => setRoadmapId(e.target.value)}
                      className="w-full bg-zinc-900 border border-zinc-800 rounded-md h-9 px-3 text-xs focus:border-indigo-500 outline-none text-zinc-100"
                   >
                       <option value="">Choose roadmap...</option>
-                      {roadmaps.map(rm => <option key={rm.id} value={rm.id}>{rm.title}</option>)}
+                      {roadmaps.map((rm) => <option key={rm.id} value={rm.id}>{rm.title}</option>)}
                   </select>
                 </div>
 
-                {(type === 'task' || type === 'deliverable') && roadmapId && (
+                {(type === "task" || type === "deliverable") && roadmapId && (
                   <div className="space-y-1.5">
                     <Label className="text-sm font-medium text-zinc-400">Select Task</Label>
-                    <select 
-                      value={taskId} 
+                    <select
+                      value={taskId}
                       onChange={(e) => setTaskId(e.target.value)}
                       className="w-full bg-zinc-900 border border-zinc-800 rounded-md h-9 px-3 text-xs focus:border-indigo-500 outline-none text-zinc-100"
                     >
                         <option value="">Choose task...</option>
-                        {tasks.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                        {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
                     </select>
                   </div>
                 )}
 
-                {type === 'deliverable' && taskId && (
+                {type === "deliverable" && taskId && (
                   <div className="space-y-1.5">
                     <Label className="text-sm font-medium text-zinc-400">Select Deliverable</Label>
-                    <select 
-                      value={deliverableId} 
+                    <select
+                      value={deliverableId}
                       onChange={(e) => setDeliverableId(Number(e.target.value))}
                       className="w-full bg-zinc-900 border border-zinc-800 rounded-md h-9 px-3 text-xs focus:border-indigo-500 outline-none text-zinc-100"
                     >
-                        {tasks.find(t => t.id === taskId)?.deliverables?.map((d: any, idx) => (
-                            <option key={idx} value={idx}>{typeof d === 'string' ? d : (d.title || d[0])}</option>
+                        {tasks.find((t) => t.id === taskId)?.deliverables?.map((d, idx) => (
+                            <option key={idx} value={idx}>{d.title}</option>
                         ))}
                     </select>
                   </div>

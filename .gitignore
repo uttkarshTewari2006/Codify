@@ -21,3 +21,6 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local planning docs
+PRE_DEPLOY_ISSUES_AND_NEXT_FEATURES.md

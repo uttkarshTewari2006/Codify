@@ -2,18 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Wand2, X, Plus } from "lucide-react";
 import { Button } from "./ui/button";
-import { Card } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
-import { Code2, Wand2, X, Plus, Rocket } from "lucide-react";
 import { fetchBackend } from "@/lib/api";
 
 interface CreateRoadmapModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: (roadmapId: string) => void;
+    onSuccess: () => void;
 }
 
 export function CreateRoadmapModal({ isOpen, onClose, onSuccess }: CreateRoadmapModalProps) {
@@ -35,7 +34,7 @@ export function CreateRoadmapModal({ isOpen, onClose, onSuccess }: CreateRoadmap
             });
             if (res.ok) {
                 const data = await res.json();
-                onSuccess(data.id);
+                onSuccess();
                 router.push(`/roadmaps/${data.id}/edit`);
                 onClose();
             }
@@ -66,7 +65,7 @@ export function CreateRoadmapModal({ isOpen, onClose, onSuccess }: CreateRoadmap
                         <>
                             <div className="mb-6">
                                 <h2 className="text-xl font-semibold tracking-tight">Create New Roadmap</h2>
-                                <p className="text-sm text-zinc-400 mt-1">Choose how you'd like to build your path.</p>
+                                <p className="text-sm text-zinc-400 mt-1">Choose how you&apos;d like to build your path.</p>
                             </div>
 
                             <div className="grid sm:grid-cols-2 gap-4">

@@ -1,17 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { format, isToday, isYesterday, parseISO } from "date-fns";
+import { CheckCircle2, Trophy, ChevronRight, Milestone, Sparkles } from "lucide-react";
 import { Card } from "./ui/card";
 import { fetchBackend } from "@/lib/api";
-import { 
-    CheckCircle2, 
-    Trophy, 
-    Clock, 
-    ChevronRight,
-    Milestone,
-    Sparkles
-} from "lucide-react";
-import { format, isToday, isYesterday, parseISO, startOfToday, subDays } from "date-fns";
 
 interface Achievement {
     id: string;
@@ -40,7 +33,7 @@ export function RecentProgress() {
                 setLoading(false);
             }
         };
-        loadProgress();
+        void loadProgress();
     }, []);
 
     const formatDate = (dateStr: string) => {
@@ -53,7 +46,7 @@ export function RecentProgress() {
     if (loading) {
         return (
             <div className="space-y-4 animate-pulse">
-                {[1, 2, 3].map(i => (
+                {[1, 2, 3].map((i) => (
                     <div key={i} className="h-20 bg-zinc-900/40 rounded-lg border border-zinc-800" />
                 ))}
             </div>
@@ -72,7 +65,6 @@ export function RecentProgress() {
         );
     }
 
-    // Group by date
     const grouped = achievements.reduce((acc, curr) => {
         const dateKey = formatDate(curr.completedAt);
         if (!acc[dateKey]) acc[dateKey] = [];
@@ -88,23 +80,23 @@ export function RecentProgress() {
                         <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">{date}</span>
                         <div className="h-px flex-1 bg-zinc-800/50" />
                     </div>
-                    
+
                     <div className="space-y-3">
                         {items.map((item) => (
-                            <Card 
-                                key={item.id} 
-                                isDark={true} 
+                            <Card
+                                key={item.id}
+                                isDark={true}
                                 className="group p-4 bg-zinc-900/40 border-zinc-800/80 hover:border-indigo-500/30 hover:bg-zinc-900/60 transition-all duration-300"
                             >
                                 <div className="flex items-start gap-4">
                                     <div className={`mt-1 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
-                                        item.type === 'task' 
-                                            ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' 
-                                            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                        item.type === "task"
+                                            ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
+                                            : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                                     }`}>
-                                        {item.type === 'task' ? <Trophy className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                                        {item.type === "task" ? <Trophy className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
                                     </div>
-                                    
+
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between gap-4">
                                             <h4 className="text-[15px] font-medium text-zinc-200 group-hover:text-zinc-100 transition-colors truncate">
@@ -114,7 +106,7 @@ export function RecentProgress() {
                                                 {format(parseISO(item.completedAt), "HH:mm")}
                                             </span>
                                         </div>
-                                        
+
                                         <div className="flex items-center gap-2 mt-1">
                                             <span className="text-xs text-zinc-500 truncate flex items-center gap-1.5">
                                                 {item.roadmapTitle}
@@ -128,7 +120,7 @@ export function RecentProgress() {
                                         </div>
                                     </div>
 
-                                    {item.type === 'task' && (
+                                    {item.type === "task" && (
                                         <div className="shrink-0 scale-0 group-hover:scale-100 transition-transform duration-300 opacity-0 group-hover:opacity-100">
                                             <Sparkles className="w-4 h-4 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
                                         </div>

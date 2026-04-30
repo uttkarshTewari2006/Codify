@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-export async function POST(req: Request) {
+export async function POST() {
     try {
         const session = await getServerSession(authOptions);
 
@@ -11,8 +11,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const body = await req.json();
-        // Here you could save the full onboarding data if needed, 
+        // Here you could save the full onboarding data if needed,
         // but the requirement is to record THAT the user has onboarded.
 
         await prisma.user.update({

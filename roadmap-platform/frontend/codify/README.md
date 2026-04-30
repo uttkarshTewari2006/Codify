@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Codify Frontend
 
-## Getting Started
+This app is the Next.js frontend for Codify. It handles authentication, onboarding, dashboard flows, roadmap editing, and the proxy layer that forwards authenticated requests to the FastAPI backend.
 
-First, run the development server:
+## Development
 
 ```bash
+npm install
+npx prisma generate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs on `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Useful Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run build
+```
 
-## Learn More
+There is currently no `npm test` script wired in `package.json`.
 
-To learn more about Next.js, take a look at the following resources:
+## Backend Integration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Browser requests should go through `/api/backend/[...path]`.
+- Server-side backend calls use `BACKEND_API_URL`.
+- The proxy signs backend auth tokens with the same shared secret family used by NextAuth.
+- Keeping browser traffic on `/api/backend` avoids exposing an internal backend hostname in the client bundle and lets frontend and backend ship behind one public origin.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Current Notes
 
-## Deploy on Vercel
+- Route protection now lives in `proxy.ts`.
+- Prisma is configured against the local SQLite file at `prisma/dev.db` for development.
+- The frontend no longer depends on fetching Google-hosted Geist fonts at build time.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Main Areas
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/dashboard`: dashboard, deadlines, curated roadmaps
+- `app/roadmaps`: roadmap view and editing flows
+- `app/api`: registration, onboarding, auth, and backend proxy routes
+- `components`: onboarding, modals, cards, and shared UI

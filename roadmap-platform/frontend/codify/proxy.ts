@@ -2,10 +2,10 @@ import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Protects routes that require auth. Public: /, /signin, /api/*, _next, static.
+ * Protect routes that require auth. Public: /, /signin, /signup, /api/*, _next, static.
  * All other paths redirect to /signin with callbackUrl if not authenticated.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isPublic =
@@ -23,9 +23,11 @@ export async function middleware(request: NextRequest) {
     });
 
     if (token) {
-      const isOnboarded = (token as any).onboarded;
+      const isOnboarded = token.onboarded;
       if (pathname === "/" || pathname === "/signin" || pathname === "/signup") {
-        return NextResponse.redirect(new URL(isOnboarded ? "/dashboard" : "/onboarding", request.url));
+        return NextResponse.redirect(
+          new URL(isOnboarded ? "/dashboard" : "/onboarding", request.url)
+        );
       }
     }
     return NextResponse.next();
@@ -44,7 +46,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(signIn);
   }
 
-  const isOnboarded = (token as any).onboarded;
+  const isOnboarded = token.onboarded;
   if (!isOnboarded && pathname !== "/onboarding") {
     return NextResponse.redirect(new URL("/onboarding", request.url));
   }

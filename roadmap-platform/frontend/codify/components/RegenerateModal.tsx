@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { X, RefreshCw } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import { X, RefreshCw } from "lucide-react";
 
 interface RegenerateModalProps {
     isOpen: boolean;
@@ -42,13 +42,13 @@ export function RegenerateModal({ isOpen, onClose, onSubmit, loading }: Regenera
                             <h2 className="text-xl font-semibold tracking-tight text-zinc-100">
                                 Regenerate AI Plan
                             </h2>
-                            <p className="text-sm text-zinc-400 mt-0.5">Tell the AI Coach what you'd like to adjust.</p>
+                            <p className="text-sm text-zinc-400 mt-0.5">Tell the AI Coach what you&apos;d like to adjust.</p>
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-zinc-300 block leading-tight">
-                            What specifically don't you like about the plan, and what should the next plan be?
+                            What specifically don&apos;t you like about the plan, and what should the next plan be?
                         </label>
                         <Textarea
                             value={feedback}

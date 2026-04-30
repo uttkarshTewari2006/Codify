@@ -128,8 +128,8 @@ export const authOptions: NextAuthOptions = {
           // Credentials: user.id is already the Prisma cuid
           token.user_id = user.id;
           token.email = user.email ?? undefined;
-          token.onboarded = (user as any).onboarded;
-          token.isAdmin = (user as any).isAdmin;
+          token.onboarded = user.onboarded;
+          token.isAdmin = user.isAdmin;
         }
       }
 
@@ -142,10 +142,10 @@ export const authOptions: NextAuthOptions = {
     },
     session({ session, token }) {
       if (session.user) {
-        (session.user as { id?: string }).id = token.user_id as string;
+        session.user.id = token.user_id;
         session.user.email = token.email ?? session.user.email ?? null;
-        (session.user as any).onboarded = token.onboarded;
-        (session.user as any).isAdmin = token.isAdmin;
+        session.user.onboarded = token.onboarded;
+        session.user.isAdmin = token.isAdmin;
       }
       return session;
     },

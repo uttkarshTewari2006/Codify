@@ -516,7 +516,7 @@ export default function RoadmapEditorPage({ params }: { params: Promise<{ id: st
                                     <div className="relative">
                                         <select
                                             value={taskFormData.type}
-                                            onChange={(e) => setTaskFormData({ ...taskFormData, type: e.target.value as any })}
+                                            onChange={(e) => setTaskFormData({ ...taskFormData, type: e.target.value as Task["type"] })}
                                             className="w-full h-9 px-3 rounded-md border border-zinc-800 bg-zinc-900/50 text-zinc-100 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer appearance-none"
                                         >
                                             <option value="info">Info</option>

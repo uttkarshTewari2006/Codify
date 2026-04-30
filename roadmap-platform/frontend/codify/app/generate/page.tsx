@@ -1,18 +1,32 @@
 "use client";
 
-import { Onboarding } from "@/components/Onboarding";
-import { useRouter } from "next/navigation";
-import { fetchBackend } from "@/lib/api";
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { Onboarding, type OnboardingData } from "@/components/Onboarding";
 import { RoadmapSkeleton } from "@/components/RoadmapSkeleton";
+import { fetchBackend } from "@/lib/api";
+
+interface GeneratePlanResponse {
+    roadmap_id?: string;
+    detail?: string;
+    error?: string;
+}
+
+interface RoadmapSummary {
+    id: string;
+    title: string;
+}
+
+interface RoadmapDetailResponse {
+    roadmap: RoadmapSummary;
+}
 
 export default function GeneratePage() {
     const router = useRouter();
     const [generating, setGenerating] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const handleComplete = async (data: any) => {
+    const handleComplete = async (data: OnboardingData) => {
         setErrorMessage(null);
         setGenerating(true);
         try {
@@ -20,27 +34,26 @@ export default function GeneratePage() {
                 method: "POST",
                 body: JSON.stringify(data),
             });
-            const genData = await genRes.json().catch(() => null);
+            const genData = (await genRes.json().catch(() => null)) as GeneratePlanResponse | null;
 
             if (genRes.ok) {
-                if (genData.roadmap_id) {
-                    // Start collision check logic
+                if (genData?.roadmap_id) {
                     try {
                         const [allRoadmapsRes, newRoadmapRes] = await Promise.all([
                             fetchBackend("/roadmaps"),
                             fetchBackend(`/roadmaps/${genData.roadmap_id}`)
                         ]);
-                        
+
                         if (allRoadmapsRes.ok && newRoadmapRes.ok) {
-                            const allRoadmaps = await allRoadmapsRes.json();
-                            const newRoadmapData = await newRoadmapRes.json();
+                            const allRoadmaps = (await allRoadmapsRes.json()) as RoadmapSummary[];
+                            const newRoadmapData = (await newRoadmapRes.json()) as RoadmapDetailResponse;
                             const { roadmap: newRoadmap } = newRoadmapData;
-                            
+
                             const baseTitle = newRoadmap.title;
                             const existingTitles = allRoadmaps
-                                .filter((r: any) => r.id !== genData.roadmap_id)
-                                .map((r: any) => r.title);
-                            
+                                .filter((r) => r.id !== genData.roadmap_id)
+                                .map((r) => r.title);
+
                             if (existingTitles.includes(baseTitle)) {
                                 let counter = 1;
                                 let uniqueTitle = `${baseTitle} (${counter})`;
@@ -48,18 +61,17 @@ export default function GeneratePage() {
                                     counter++;
                                     uniqueTitle = `${baseTitle} (${counter})`;
                                 }
-                                
-                                // Update the new roadmap with the unique title
+
                                 await fetchBackend(`/roadmaps/${genData.roadmap_id}`, {
                                     method: "PATCH",
                                     body: JSON.stringify({ title: uniqueTitle })
                                 });
                             }
                         }
-                    } catch (e) {
-                        console.error("Collision check failed:", e);
+                    } catch (error) {
+                        console.error("Collision check failed:", error);
                     }
-                    
+
                     router.push(`/roadmaps/${genData.roadmap_id}/edit`);
                 } else {
                     router.push("/dashboard");

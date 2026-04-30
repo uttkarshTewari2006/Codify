@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronRight, ChevronLeft, Search, Network } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Label } from "./ui/label";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Slider } from "./ui/slider";
 import { Textarea } from "./ui/textarea";
-import { ChevronRight, ChevronLeft, Search, Network } from "lucide-react";
 import { Input } from "./ui/input";
 
-interface OnboardingData {
+export interface OnboardingData {
     level: string;
     targetRole: string;
     otherRole?: string;
@@ -58,7 +58,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         additionalInfo: "",
     });
 
-    const updateData = (field: string, value: any) => {
+    const updateData = <K extends keyof OnboardingData>(field: K, value: OnboardingData[K]) => {
         setData((prev) => ({ ...prev, [field]: value }));
     };
 
@@ -118,7 +118,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <Card className="w-full max-w-2xl p-8 shadow-sm border-zinc-800 bg-zinc-900 rounded-lg">
                 <div className="mb-8">
                     <div className="flex justify-between items-center mb-2">
-                        <h1 className="text-xl font-semibold text-zinc-50 tracking-tight">Let's personalize your prep</h1>
+                        <h1 className="text-xl font-semibold text-zinc-50 tracking-tight">Let&apos;s personalize your prep</h1>
                         <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Step {step + 1} of {totalSteps}</span>
                     </div>
                     <div className="w-full bg-zinc-800 h-1 rounded-full mt-4 overflow-hidden">
@@ -134,10 +134,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div>
                                 <h2 className="text-lg font-medium text-zinc-50 mb-1">
-                                    What's your current level?
+                                    What&apos;s your current level?
                                 </h2>
                                 <p className="text-sm text-zinc-400 mb-6">
-                                    Be honest — this helps us calibrate your plan
+                                    Be honest - this helps us calibrate your plan
                                 </p>
                             </div>
                             <RadioGroup value={data.level} onValueChange={(val) => updateData("level", val)}>
@@ -219,7 +219,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div>
                                 <h2 className="text-lg font-medium text-zinc-50 mb-1">
-                                    What's your target role & timeline?
+                                    What&apos;s your target role & timeline?
                                 </h2>
                                 <p className="text-sm text-zinc-400 mb-6">
                                     This helps us prioritize topics and set the right pace
@@ -302,7 +302,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                                     What do you struggle with most?
                                 </h2>
                                 <p className="text-sm text-zinc-400 mb-6">
-                                    Select all that apply — we'll tailor your plan to overcome these hurdles
+                                    Select all that apply - we&apos;ll tailor your plan to overcome these hurdles
                                 </p>
                             </div>
                             <div className="space-y-3">
@@ -470,7 +470,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                                                     key={w.value}
                                                     variant="outline"
                                                     size="sm"
-                                                    className={`justify-start rounded-md font-normal ${data.weaknesses.includes(w.value) ? 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-100 border-indigo-500/30' : 'text-zinc-400 border-zinc-800 bg-transparent hover:text-zinc-100 hover:bg-zinc-800'}`}
+                                                    className={`justify-start rounded-md font-normal ${data.weaknesses.includes(w.value) ? "bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-100 border-indigo-500/30" : "text-zinc-400 border-zinc-800 bg-transparent hover:text-zinc-100 hover:bg-zinc-800"}`}
                                                     onClick={() => toggleMultiSelect("weaknesses", w.value)}
                                                 >
                                                     {w.label}
@@ -490,7 +490,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                                             className="min-h-[80px] bg-zinc-950 border-zinc-800 rounded-md focus:border-zinc-700 transition-all mb-4 text-sm resize-none text-zinc-100 placeholder:text-zinc-600"
                                         />
                                         <Label className="text-zinc-200 font-medium mb-2 block text-sm">
-                                            Anything else you'd like to share?
+                                            Anything else you&apos;d like to share?
                                         </Label>
                                         <Textarea
                                             placeholder="Provide any additional context or constraints..."

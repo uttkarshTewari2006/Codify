@@ -1,12 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
 
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Brain, Code2, PlayCircle, Library } from "lucide-react";
 import { fetchBackend } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { Brain, Code2, PlayCircle, Library, CheckCircle2 } from "lucide-react";
 
 interface CuratedTask {
   title: string;
@@ -17,6 +17,11 @@ interface CuratedTask {
   links?: string[];
 }
 
+type CuratedDeliverable =
+  | [string, boolean]
+  | { title?: string; completed?: boolean }
+  | string;
+
 interface CuratedRoadmap {
   roadmap_title: string;
   category: string;
@@ -24,7 +29,7 @@ interface CuratedRoadmap {
   tasks: CuratedTask[];
 }
 
-function getDeliverableTitle(deliverable: CuratedTask["deliverables"] extends Array<infer T> ? T : never) {
+function getDeliverableTitle(deliverable: CuratedDeliverable) {
   if (typeof deliverable === "string") return deliverable;
   if (Array.isArray(deliverable)) return deliverable[0];
   if (deliverable && typeof deliverable === "object") return deliverable.title || "";
@@ -32,7 +37,7 @@ function getDeliverableTitle(deliverable: CuratedTask["deliverables"] extends Ar
 }
 
 export function CuratedRoadmapsDisplay() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [roadmaps, setRoadmaps] = useState<CuratedRoadmap[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,17 +99,17 @@ export function CuratedRoadmapsDisplay() {
         const bgIcon =
           rm.category === "Interview Prep" ? "bg-blue-500/10" :
           rm.category === "Networking Guides" ? "bg-emerald-500/10" : "bg-purple-500/10";
-        
-        const Icon = 
-            rm.category === "Interview Prep" ? Code2 :
-            rm.category === "Networking Guides" ? Library : Brain;
+
+        const Icon =
+          rm.category === "Interview Prep" ? Code2 :
+          rm.category === "Networking Guides" ? Library : Brain;
 
         return (
-          <Card 
-            key={idx} 
+          <Card
+            key={idx}
             className="overflow-hidden border-zinc-800 bg-zinc-900/40 hover:border-indigo-500/50 transition-all"
           >
-            <div 
+            <div
               className="p-6 cursor-pointer flex gap-4"
               onClick={() => setExpandedId(isExpanded ? null : idx)}
             >
@@ -121,7 +126,7 @@ export function CuratedRoadmapsDisplay() {
                 <p className="text-sm text-zinc-400 mt-2 line-clamp-2">
                   {rm.description}
                 </p>
-                
+
                 {!isExpanded && (
                   <div className="flex items-center justify-between mt-3">
                     <div className="text-xs text-indigo-400 font-medium flex items-center gap-1">
@@ -129,9 +134,9 @@ export function CuratedRoadmapsDisplay() {
                       View {rm.tasks.length} Modules
                     </div>
                     {status === "authenticated" && (
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         className="h-8 px-3 text-xs bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white border border-indigo-500/20"
                         disabled={forkingId !== null}
                         onClick={(e: React.MouseEvent) => {
@@ -162,7 +167,7 @@ export function CuratedRoadmapsDisplay() {
                         )}
                       </div>
                       <p className="text-xs text-zinc-400 mb-3">{task.description}</p>
-                      
+
                       {task.deliverables && task.deliverables.length > 0 && (
                         <div className="mt-2 space-y-1">
                           <p className="text-xs font-semibold text-zinc-500 mb-2">Deliverables:</p>

@@ -1,22 +1,24 @@
 /**
- * Call the FastAPI backend. Auth is handled by the Next.js proxy so the
- * session cookie is sent and the proxy adds the Bearer token for FastAPI.
+ * Browser traffic should always go through the Next.js proxy so the app can be
+ * deployed behind one origin and keep auth/cookies on the frontend domain.
+ *
+ * Server-side calls should use a server-only backend URL instead of a public
+ * env var, because this is internal service-to-service configuration.
  */
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const SERVER_API_BASE = process.env.BACKEND_API_URL ?? "http://localhost:8000";
 
-/** Base URL for backend calls from the browser — use the proxy so cookies are sent */
 export const BACKEND_API =
-  typeof window !== "undefined" ? "/api/backend" : API_BASE;
+  typeof window !== "undefined" ? "/api/backend" : SERVER_API_BASE;
 
-/**
- * Fetch from the backend. In the browser, use the proxy (/api/backend) so
- * the session cookie is included and the server adds the JWT for FastAPI.
- */
 export async function fetchBackend(
   path: string,
   options?: RequestInit
 ): Promise<Response> {
-  const url = typeof window !== "undefined" ? `/api/backend${path}` : `${API_BASE}${path}`;
+  const url =
+    typeof window !== "undefined"
+      ? `/api/backend${path}`
+      : `${SERVER_API_BASE}${path}`;
+
   return fetch(url, {
     ...options,
     credentials: "include",
@@ -26,5 +28,3 @@ export async function fetchBackend(
     },
   });
 }
-
-export { API_BASE };
