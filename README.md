@@ -21,7 +21,8 @@ Codify is a roadmap-building product with a Next.js frontend and a FastAPI backe
 ```bash
 cd roadmap-platform/frontend/codify
 npm install
-npx prisma generate
+set DATABASE_URL=postgresql://codify:codify@localhost:5432/codify
+scripts\init_db.cmd
 npm run dev
 ```
 
@@ -31,12 +32,12 @@ The frontend runs on `http://localhost:3000`.
 
 ```bash
 cd roadmap-platform/backend
-python -m venv .venv
 # Windows
-.venv\Scripts\activate
+scripts\bootstrap_backend_env.cmd
 # macOS/Linux
+python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 uvicorn main:app --reload
 ```
 
@@ -46,10 +47,11 @@ The backend runs on `http://localhost:8000`.
 
 - Browser traffic stays on the frontend origin and goes through `/api/backend/[...path]`.
 - Server-side backend calls use `BACKEND_API_URL`.
-- Backend database access is env-driven through `DATABASE_URL`, with a local SQLite fallback for development.
+- Frontend and backend now share a Postgres-first `DATABASE_URL`.
 - Backend CORS is env-driven through `CORS_ORIGINS`.
 - Backend JWT validation uses `JWT_SECRET` and falls back to `NEXTAUTH_SECRET`.
 - In deployed environments, set the backend `JWT_SECRET` to the same value as the frontend `NEXTAUTH_SECRET`.
+- Chroma persistence is env-driven through `CHROMA_PERSIST_DIR`.
 
 ## Verification
 
@@ -59,15 +61,26 @@ The backend runs on `http://localhost:8000`.
 cd roadmap-platform/frontend/codify
 npm run lint
 npm run build
+npm test
 ```
 
-`package.json` does not currently define frontend `test` or Playwright scripts.
+The frontend test script currently runs Vitest with `--passWithNoTests`, so it succeeds even though no frontend test files are checked in yet.
 
 ### Backend
 
 ```bash
 cd roadmap-platform/backend
-pytest
+.venv\Scripts\python.exe -m pytest tests -q
+```
+
+### Bootstrap
+
+```bash
+docker compose up -d postgres
+cd roadmap-platform/frontend/codify
+scripts\init_db.cmd
+cd ../../backend
+.venv\Scripts\python.exe scripts\seed_golden_data.py
 ```
 
 ### RAG Validation
@@ -83,8 +96,8 @@ python scripts/validate_rag_quality.py
 - Vector store: `roadmap-platform/backend/chroma_db`
 - Admin ingest route: `POST /admin/rag/ingest`
 
-## Known Gaps
+## Deployment
 
-- Docker deployment wiring is not defined yet.
-- Production database rollout should move to Postgres instead of the current SQLite-oriented local default.
-- Prisma migrations are not yet present for a clean bootstrap flow.
+- `docker-compose.yml` runs Postgres, the FastAPI backend, and the Next.js frontend together.
+- `roadmap-platform/backend/Dockerfile` builds the API image.
+- `roadmap-platform/frontend/codify/Dockerfile` builds the frontend image.

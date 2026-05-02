@@ -1,11 +1,20 @@
 import requests
 import json
+import os
 
 # Manual test for generate-plan
 # Use a dummy user_id or try to find a real one
 # For testing purpose, we can try to find an existing user id from the DB
 
-backend_url = "http://localhost:3000/api/backend"
+frontend_app_url = (
+    os.environ.get("FRONTEND_APP_URL")
+    or os.environ.get("NEXTAUTH_URL")
+)
+
+if not frontend_app_url:
+    raise SystemExit("Set FRONTEND_APP_URL or NEXTAUTH_URL before running this script.")
+
+backend_url = f"{frontend_app_url.rstrip('/')}/api/backend"
 # This might fail due to lack of JWT but we are just checking if it crashes or returns 401/403
 
 onboarding_data = {

@@ -1,27 +1,49 @@
-import sys
+from copy import deepcopy
 from unittest.mock import MagicMock
-
-# Mock KnowledgeBase before main is imported
-kb_mock = MagicMock()
-kb_mock.query.return_value = []
-kb_mock.get_stats.return_value = {"total_chunks": 0}
-sys.modules["knowledge_base"] = MagicMock()
-sys.modules["knowledge_base"].KnowledgeBase = MagicMock(return_value=kb_mock)
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import SQLModel, create_engine, Session, StaticPool
-from main import app, kb
-from database import get_session
+from sqlmodel import SQLModel, Session, StaticPool, create_engine
+
+import main
 from auth import get_user_id
-import respx
-from httpx import Response
-import json
+from database import get_session
 
-app.kb = kb_mock
-
-# Setup in-memory SQLite
 SQLALCHEMY_DATABASE_URL = "sqlite://"
+
+SAMPLE_GENERATED_TASKS = [
+    {
+        "title": "Test Task 1",
+        "description": "Description 1",
+        "duration": "1 hour",
+        "type": "info",
+        "deliverables": ["Deliverable 1"],
+        "links": ["https://example.com"],
+        "order": 0,
+    },
+    {
+        "title": "Test Task 2",
+        "description": "Description 2",
+        "duration": "2 hours",
+        "type": "goal",
+        "deliverables": ["Deliverable 2"],
+        "links": [],
+        "order": 1,
+    },
+]
+
+SAMPLE_REGENERATED_TASKS = [
+    {
+        "title": "Updated Task",
+        "description": "Updated description",
+        "duration": "90 minutes",
+        "type": "guide",
+        "deliverables": ["Updated deliverable"],
+        "links": ["https://roadmap.sh/full-stack"],
+        "order": 0,
+    }
+]
+
 
 @pytest.fixture(name="session")
 def session_fixture():
@@ -34,62 +56,40 @@ def session_fixture():
     with Session(engine) as session:
         yield session
 
+
 @pytest.fixture(name="client")
-def client_fixture(session: Session):
+def client_fixture(session: Session, monkeypatch: pytest.MonkeyPatch):
     def get_session_override():
         return session
 
     def get_user_id_override():
         return "test-user-id"
 
-    app.dependency_overrides[get_session] = get_session_override
-    app.dependency_overrides[get_user_id] = get_user_id_override
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
+    kb_mock = MagicMock()
+    kb_mock.is_available.return_value = True
+    kb_mock.query.return_value = []
+    kb_mock.get_stats.return_value = {
+        "available": True,
+        "total_chunks": 0,
+        "collection_name": "roadmap_knowledge",
+        "persist_directory": "./chroma_db",
+    }
 
-@pytest.fixture(autouse=True)
-def mock_ai_calls():
-    with respx.mock(base_url="https://api.openai.com/v1") as respx_mock:
-        # Mock for ChatOpenAI (OpenAI API)
-        respx_mock.post("/chat/completions").mock(return_value=Response(
-            200, 
-            json={
-                "choices": [{
-                    "message": {
-                        "content": json.dumps([
-                            {
-                                "title": "Test Task 1",
-                                "description": "Description 1",
-                                "duration": "1 hour",
-                                "type": "info",
-                                "deliverables": ["Deliverable 1"],
-                                "links": ["https://example.com"]
-                            },
-                            {
-                                "title": "Test Task 2",
-                                "description": "Description 2",
-                                "duration": "2 hours",
-                                "type": "goal",
-                                "deliverables": ["Deliverable 2"],
-                                "links": []
-                            }
-                        ])
-                    }
-                }]
-            }
-        ))
-        
-        # Mock for Groq if needed (though current code uses ChatOpenAI)
-        respx_mock.post("https://api.groq.com/openai/v1/chat/completions").mock(return_value=Response(
-            200,
-            json={
-                "choices": [{
-                    "message": {
-                        "content": "[]" # Placeholder
-                    }
-                }]
-            }
-        ))
-        
-        yield respx_mock
+    monkeypatch.setattr(main, "kb", kb_mock)
+    monkeypatch.setattr(
+        main,
+        "generate_roadmap_tasks",
+        lambda onboarding_data, knowledge_base=None: deepcopy(SAMPLE_GENERATED_TASKS),
+    )
+    monkeypatch.setattr(
+        main,
+        "regenerate_roadmap_tasks",
+        lambda existing_dashboard, feedback, knowledge_base=None: deepcopy(SAMPLE_REGENERATED_TASKS),
+    )
+
+    main.app.dependency_overrides[get_session] = get_session_override
+    main.app.dependency_overrides[get_user_id] = get_user_id_override
+
+    client = TestClient(main.app)
+    yield client
+    main.app.dependency_overrides.clear()

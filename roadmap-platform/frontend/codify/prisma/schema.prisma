@@ -3,19 +3,20 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  password  String
-  name      String?
-  onboarded Boolean   @default(false)
-  isAdmin   Boolean   @default(false)
-  roadmaps  Roadmap[]
-  deadlines Deadline[]
+  id           String        @id @default(cuid())
+  email        String        @unique
+  password     String
+  name         String?
+  onboarded    Boolean       @default(false)
+  isAdmin      Boolean       @default(false)
+  roadmaps     Roadmap[]
+  deadlines    Deadline[]
+  feedbackLogs FeedbackLog[]
 }
 
 model Roadmap {
@@ -26,26 +27,27 @@ model Roadmap {
   user        User     @relation(fields: [userId], references: [id])
   tasks       Task[]
   deadlines   Deadline[]
+  feedbackLogs FeedbackLog[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model Task {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  duration    String?
-  type        String   @default("info") // problem, guide, info, goal
-  status      String   @default("todo") // todo, in-progress, completed
-  deliverables String? // stored as JSON string array due to sqlite support
-  links       String?  // stored as JSON string array due to sqlite support
-  roadmapId   String
-  roadmap     Roadmap  @relation(fields: [roadmapId], references: [id])
-  order       Int      @default(0) // order of task in roadmap
-  completedAt DateTime?
-  deadlines   Deadline[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String      @id @default(cuid())
+  title        String
+  description  String?
+  duration     String?
+  type         String      @default("info") // problem, guide, info, goal
+  status       String      @default("todo") // todo, in-progress, completed
+  deliverables Json?
+  links        Json?
+  roadmapId    String
+  roadmap      Roadmap     @relation(fields: [roadmapId], references: [id])
+  order        Int         @default(0) // order of task in roadmap
+  completedAt  DateTime?
+  deadlines    Deadline[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model Deadline {
@@ -69,4 +71,18 @@ model Deadline {
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model FeedbackLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  roadmapId String
+  roadmap   Roadmap  @relation(fields: [roadmapId], references: [id])
+  feedback  String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([roadmapId])
+  @@index([userId])
 }

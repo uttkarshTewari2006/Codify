@@ -11,6 +11,9 @@ env/
 .env.local
 *.egg-info/
 .eggs/
+roadmap-platform/backend/chroma_db/
+roadmap-platform/frontend/codify/prisma/*.db
+roadmap-platform/frontend/codify/prisma/*.db-*
 
 # IDE
 .idea/

@@ -1,0 +1,128 @@
+{
+  "01-backend-foundations.md": {
+    "urls": [
+      "https://roadmap.sh/backend/projects",
+      "https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Server-side/First_steps/Client-Server_overview",
+      "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview",
+      "https://www.postgresql.org/docs/current/tutorial.html",
+      "https://neon.com/postgresql/tutorial",
+      "https://datatracker.ietf.org/doc/html/rfc6749",
+      "https://fastapi.tiangolo.com/tutorial/",
+      "https://fastapi.tiangolo.com/tutorial/first-steps/",
+      "https://kafka.apache.org/documentation/",
+      "https://docs.confluent.io/kafka/introduction.html",
+      "https://owasp.org/API-Security/editions/2023/en/0x11-t10/"
+    ]
+  },
+  "02-frontend-foundations.md": {
+    "urls": [
+      "https://roadmap.sh/frontend",
+      "https://roadmap.sh/frontend/projects",
+      "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started",
+      "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Structuring_content",
+      "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics",
+      "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide",
+      "https://web.dev/learn/",
+      "https://www.theodinproject.com/paths/foundations/courses/foundations",
+      "https://www.freecodecamp.org/learn/2022/responsive-web-design/",
+      "https://frontendmasters.com/learn/",
+      "https://www.codecademy.com/learn/paths/front-end-engineer-career-path",
+      "https://testing-library.com/docs/",
+      "https://playwright.dev/docs/intro",
+      "https://www.typescriptlang.org/docs/handbook/intro.html",
+      "https://roadmap.sh/guides"
+    ]
+  },
+  "03-devops-platform-engineering.md": {
+    "urls": [
+      "https://roadmap.sh/devops",
+      "https://roadmap.sh/devops-beginner",
+      "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Environment_setup/Command_line",
+      "https://developer.hashicorp.com/terraform/tutorials/aws-get-started",
+      "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+      "https://developer.mozilla.org/en-US/docs/Web/Security",
+      "https://kubernetes.io/docs/tutorials/",
+      "https://docs.docker.com/get-started/",
+      "https://prometheus.io/docs/introduction/overview/",
+      "https://grafana.com/docs/grafana/latest/getting-started/",
+      "https://www.ansible.com/resources/get-started",
+      "https://learn.microsoft.com/en-us/azure/devops/",
+      "https://docs.github.com/actions",
+      "https://www.redhat.com/en/topics/devops/what-is-devops",
+      "https://roadmap.sh/guides"
+    ]
+  },
+  "04-full-stack-integration.md": {
+    "urls": [
+      "https://roadmap.sh/full-stack",
+      "https://roadmap.sh/frontend",
+      "https://roadmap.sh/backend",
+      "https://nextjs.org/learn",
+      "https://nextjs.org/docs",
+      "https://docs.djangoproject.com/en/6.0/intro/tutorial01/",
+      "https://www.djangoproject.com/start/",
+      "https://www.django-rest-framework.org/tutorial/quickstart/",
+      "https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Server-side/First_steps/Client-Server_overview",
+      "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview",
+      "https://www.postgresql.org/docs/current/tutorial.html",
+      "https://fastapi.tiangolo.com/tutorial/",
+      "https://playwright.dev/docs/intro",
+      "https://testing-library.com/docs/",
+      "https://roadmap.sh/guides"
+    ]
+  },
+  "05-system-design-scalability.md": {
+    "urls": [
+      "https://roadmap.sh/system-design",
+      "https://github.com/donnemartin/system-design-primer",
+      "https://highscalability.com",
+      "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview",
+      "https://kafka.apache.org/documentation/",
+      "https://prometheus.io/docs/introduction/overview/",
+      "https://grafana.com/docs/grafana/latest/getting-started/",
+      "https://www.postgresql.org/docs/current/tutorial.html",
+      "https://neon.com/postgresql/tutorial",
+      "https://owasp.org/API-Security/editions/2023/en/0x11-t10/",
+      "https://roadmap.sh/software-design-architecture",
+      "https://kubernetes.io/docs/concepts/overview/",
+      "https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html",
+      "https://www.cloudflare.com/learning/cdn/what-is-a-cdn/"
+    ]
+  },
+  "06-software-architecture.md": {
+    "urls": [
+      "https://roadmap.sh/software-design-architecture",
+      "https://roadmap.sh/software-architect",
+      "https://github.com/donnemartin/system-design-primer",
+      "https://www.milanjovanovic.tech/blog/building-your-first-use-case-with-clean-architecture",
+      "https://developers.redhat.com/articles/2023/08/08/implementing-clean-architecture-solutions-practical-example",
+      "https://github.com/leandrocp/awesome-cqrs-event-sourcing",
+      "https://docs.eventsourcingdb.io/best-practices/eventsourcingdb-cqrs-and-ddd/",
+      "https://www.geeksforgeeks.org/system-design/complete-guide-to-clean-architecture/",
+      "https://roadmap.sh/system-design",
+      "https://roadmap.sh/guides",
+      "https://highscalability.com",
+      "https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html",
+      "https://kubernetes.io/docs/concepts/overview/",
+      "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview",
+      "https://www.cloudflare.com/learning/cdn/what-is-a-cdn/"
+    ]
+  },
+  "07-ai-engineer-rag-systems.md": {
+    "urls": [
+      "https://roadmap.sh/ai-engineer",
+      "https://roadmap.sh/ai-engineer/projects",
+      "https://roadmap.sh/ai-agents",
+      "https://developers.openai.com/api/docs/guides/prompt-engineering",
+      "https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api",
+      "https://developers.openai.com/api/docs/guides/prompt-guidance",
+      "https://learnopencv.com/vector-db-and-rag-pipeline-for-document-rag/",
+      "https://writer.com/engineering/rag-vector-database/",
+      "https://dev.to/klement_gunndu_e16216829c/vector-databases-guide-rag-applications-2025-55oj",
+      "https://roadmap.sh/guides",
+      "https://roadmap.sh/machine-learning",
+      "https://roadmap.sh/ai-data-scientist",
+      "https://roadmap.sh/pdfs/roadmaps/ai-engineer.pdf"
+    ]
+  }
+}

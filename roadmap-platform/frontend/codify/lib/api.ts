@@ -5,10 +5,19 @@
  * Server-side calls should use a server-only backend URL instead of a public
  * env var, because this is internal service-to-service configuration.
  */
-const SERVER_API_BASE = process.env.BACKEND_API_URL ?? "http://localhost:8000";
+function getServerApiBase(): string {
+  const apiBase = process.env.BACKEND_API_URL?.trim();
+  if (!apiBase) {
+    throw new Error("BACKEND_API_URL must be configured for server-side backend calls.");
+  }
+
+  return apiBase.replace(/\/+$/, "");
+}
 
 export const BACKEND_API =
-  typeof window !== "undefined" ? "/api/backend" : SERVER_API_BASE;
+  typeof window !== "undefined"
+    ? "/api/backend"
+    : process.env.BACKEND_API_URL?.trim().replace(/\/+$/, "") ?? "";
 
 export async function fetchBackend(
   path: string,
@@ -17,7 +26,7 @@ export async function fetchBackend(
   const url =
     typeof window !== "undefined"
       ? `/api/backend${path}`
-      : `${SERVER_API_BASE}${path}`;
+      : `${getServerApiBase()}${path}`;
 
   return fetch(url, {
     ...options,

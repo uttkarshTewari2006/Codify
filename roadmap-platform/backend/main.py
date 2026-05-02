@@ -10,7 +10,7 @@ load_dotenv()
 
 from datetime import datetime
 from auth import get_user_id
-from database import Roadmap, Task, User, Deadline, get_session
+from database import Deadline, FeedbackLog, Roadmap, Task, User, get_session
 from generator import generate_roadmap_tasks, regenerate_roadmap_tasks
 from knowledge_base import KnowledgeBase
 import json
@@ -32,7 +32,7 @@ def ensure_kb_available(feature_name: str) -> None:
 
 
 def get_cors_origins() -> list[str]:
-    raw_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000")
+    raw_origins = os.getenv("CORS_ORIGINS", "")
     return [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
 
 # Secure Admin Dependency
@@ -88,6 +88,23 @@ def normalize_task(task: Task) -> Task:
     task.deliverables = format_deliverables(task.deliverables)
     task.links = task.links or []
     return task
+
+
+def serialize_feedback_log(log: FeedbackLog, user: User | None, roadmap: Roadmap | None) -> dict:
+    return {
+        "id": log.id,
+        "feedback": log.feedback,
+        "createdAt": log.createdAt.isoformat(),
+        "roadmap": {
+            "id": roadmap.id,
+            "title": roadmap.title,
+        } if roadmap else None,
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+        } if user else None,
+    }
 
 
 @app.get("/")
@@ -199,6 +216,17 @@ def regenerate_plan(
                 roadmapId=roadmap_id
             )
             session.add(task)
+
+        cleaned_feedback = feedback.strip()
+        if cleaned_feedback:
+            session.add(
+                FeedbackLog(
+                    id=str(uuid.uuid4()),
+                    userId=user_id,
+                    roadmapId=roadmap_id,
+                    feedback=cleaned_feedback,
+                )
+            )
         
         session.commit()
         return {"message": "Plan regenerated successfully"}
@@ -759,7 +787,7 @@ def get_rag_stats(admin: User = Depends(get_current_admin)):
 def ingest_knowledge(admin: User = Depends(get_current_admin)):
     """Protected: triggers knowledge document ingestion."""
     ensure_kb_available("Knowledge ingestion")
-    kb.ingest_knowledge_docs()
+    kb.ingest_knowledge_docs(replace_existing=True)
     return {"message": "Knowledge document ingestion triggered successfully"}
 
 @app.post("/admin/rag/query")
@@ -796,13 +824,30 @@ def query_rag(
 
 @app.get("/admin/feedback")
 def get_feedback_logs(
-    user_id: str = Depends(get_user_id),
+    admin: User = Depends(get_current_admin),
     session: Session = Depends(get_session)
 ):
-    """
-    Fetches all regeneration feedback logs.
-    Currently, we will just fetch recent Roadmap updates that came from regeneration.
-    (In Phase 2 we will use a proper FeedbackLog table)
-    """
-    # For now, let's just return a placeholder or query roadmaps with specific feedback
-    return {"message": "Feedback monitoring coming soon in Phase 2 with FeedbackLog table"}
+    """Protected: returns recent roadmap regeneration feedback logs."""
+    logs = session.exec(
+        select(FeedbackLog).order_by(FeedbackLog.createdAt.desc())
+    ).all()
+
+    user_ids = {log.userId for log in logs}
+    roadmap_ids = {log.roadmapId for log in logs}
+
+    users = {
+        user.id: user
+        for user in session.exec(select(User).where(User.id.in_(user_ids))).all()
+    } if user_ids else {}
+    roadmaps = {
+        roadmap.id: roadmap
+        for roadmap in session.exec(select(Roadmap).where(Roadmap.id.in_(roadmap_ids))).all()
+    } if roadmap_ids else {}
+
+    return {
+        "count": len(logs),
+        "items": [
+            serialize_feedback_log(log, users.get(log.userId), roadmaps.get(log.roadmapId))
+            for log in logs
+        ],
+    }

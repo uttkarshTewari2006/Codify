@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowRight, Code2, Brain, Users, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { ArrowRight, Brain, Code2, Sparkles, Users } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+
 import { CuratedRoadmapsDisplay } from "@/components/CuratedRoadmapsDisplay";
+import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -15,19 +16,22 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans">
-      {/* Navigation */}
       <nav className="border-b border-zinc-800">
-        <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <Code2 className="h-6 w-6 text-indigo-500" />
-            <span className="font-mono font-bold tracking-tight text-lg">Codify</span>
+            <span className="font-mono text-lg font-bold tracking-tight">Codify</span>
           </div>
           <div className="flex items-center gap-6">
-            <a href="#features" className="text-sm font-medium hover:text-zinc-300 transition-colors">Features</a>
-            <a href="#how-it-works" className="text-sm font-medium hover:text-zinc-300 transition-colors">How it Works</a>
+            <a href="#features" className="text-sm font-medium transition-colors hover:text-zinc-300">
+              Features
+            </a>
+            <a href="#how-it-works" className="text-sm font-medium transition-colors hover:text-zinc-300">
+              How it Works
+            </a>
             <Button
               onClick={handleGetStarted}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow-sm h-9 px-4 font-medium"
+              className="h-9 rounded-md bg-indigo-600 px-4 font-medium text-white shadow-sm hover:bg-indigo-700"
             >
               Get Started
             </Button>
@@ -35,35 +39,37 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <section className="mx-auto max-w-7xl px-6 py-24">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md border border-zinc-800 bg-zinc-900 mb-6">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-3 py-1">
               <Sparkles className="h-4 w-4 text-indigo-400" />
-              <span className="text-xs font-medium text-zinc-300 uppercase tracking-wider">AI-Powered Personalization</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-zinc-300">
+                AI-Powered Personalization
+              </span>
             </div>
-            <h1 className="text-5xl font-semibold mb-6 tracking-tight leading-tight">
+            <h1 className="mb-6 text-5xl font-semibold leading-tight tracking-tight">
               Interview Prep That
               <br />
               <span className="text-indigo-500">Adapts to You</span>
             </h1>
-            <p className="text-lg text-zinc-400 mb-8 leading-relaxed max-w-lg">
-              Stop grinding generic problems. Get a personalized study plan powered by AI that understands your level, weaknesses, and goals.
+            <p className="mb-8 max-w-lg text-lg leading-relaxed text-zinc-400">
+              Stop grinding generic problems. Get a personalized study plan powered by AI
+              that understands your level, weaknesses, and goals.
             </p>
             <div className="flex items-center gap-4">
               <Button
                 onClick={handleGetStarted}
                 size="lg"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow-sm group h-12 px-6 font-medium"
+                className="group h-12 rounded-md bg-indigo-600 px-6 font-medium text-white shadow-sm hover:bg-indigo-700"
               >
                 Start Your Plan
-                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
               <Button
                 variant="outline"
                 size="lg"
-                className="border-zinc-800 bg-zinc-800 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded-md h-12 px-6 font-medium"
+                className="h-12 rounded-md border-zinc-800 bg-zinc-800 px-6 font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white"
               >
                 Learn More
               </Button>
@@ -80,14 +86,14 @@ export default function LandingPage() {
               </div>
               <div className="h-10 w-px bg-zinc-800" />
               <div>
-                <div className="text-2xl font-mono font-semibold text-zinc-100">∞</div>
-                <div className="mt-1">Community Learning</div>
+                <div className="text-2xl font-mono font-semibold text-zinc-100">RAG</div>
+                <div className="mt-1">Grounded Resources</div>
               </div>
             </div>
           </div>
           <div className="relative">
-            <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full" />
-            <div className="relative w-full aspect-[4/3] rounded-lg border border-zinc-800 shadow-2xl overflow-hidden bg-zinc-900">
+            <div className="absolute inset-0 rounded-full bg-indigo-500/20 blur-3xl" />
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 shadow-2xl">
               <Image
                 src="/developer_workspace.png"
                 alt="Developer workspace"
@@ -100,75 +106,84 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="mx-auto max-w-7xl px-6 py-24 border-t border-zinc-900">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-semibold tracking-tight mb-4">Why Codify is Different</h2>
-          <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
-            No more one-size-fits-all prep courses. Our platform uses advanced AI technology to create plans that actually match your needs.
+      <section id="features" className="mx-auto max-w-7xl border-t border-zinc-900 px-6 py-24">
+        <div className="mb-16 text-center">
+          <h2 className="mb-4 text-3xl font-semibold tracking-tight">Why Codify is Different</h2>
+          <p className="mx-auto max-w-2xl text-lg text-zinc-400">
+            No more one-size-fits-all prep courses. Our platform uses advanced AI technology
+            to create plans that actually match your needs.
           </p>
         </div>
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="p-8 rounded-lg border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/80 transition-colors">
-            <div className="h-12 w-12 rounded-md bg-indigo-500/10 flex items-center justify-center mb-6 border border-indigo-500/20">
+        <div className="grid gap-8 md:grid-cols-3">
+          <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-8 transition-colors hover:bg-zinc-900/80">
+            <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-md border border-indigo-500/20 bg-indigo-500/10">
               <Brain className="h-6 w-6 text-indigo-400" />
             </div>
-            <h3 className="text-xl font-medium mb-3">AI-Powered Personalization</h3>
-            <p className="text-zinc-400 leading-relaxed">
-              AI that retrieves context about your level, weaknesses, and goals to generate truly personalized study plans.
+            <h3 className="mb-3 text-xl font-medium">AI-Powered Personalization</h3>
+            <p className="leading-relaxed text-zinc-400">
+              AI retrieves context about your level, weaknesses, and goals to generate a
+              personalized study plan.
             </p>
           </div>
-          <div className="p-8 rounded-lg border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/80 transition-colors">
-            <div className="h-12 w-12 rounded-md bg-indigo-500/10 flex items-center justify-center mb-6 border border-indigo-500/20">
+          <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-8 transition-colors hover:bg-zinc-900/80">
+            <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-md border border-indigo-500/20 bg-indigo-500/10">
               <Users className="h-6 w-6 text-indigo-400" />
             </div>
-            <h3 className="text-xl font-medium mb-3">Community-Driven AI</h3>
-            <p className="text-zinc-400 leading-relaxed">
-              Problem ratings and comments feed back into the AI, making recommendations smarter with every interaction.
+            <h3 className="mb-3 text-xl font-medium">Curated Resource Grounding</h3>
+            <p className="leading-relaxed text-zinc-400">
+              Retrieved knowledge documents carry explicit learning links so roadmap tasks can
+              point back to real resources instead of guessed URLs.
             </p>
           </div>
-          <div className="p-8 rounded-lg border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/80 transition-colors">
-            <div className="h-12 w-12 rounded-md bg-indigo-500/10 flex items-center justify-center mb-6 border border-indigo-500/20">
+          <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-8 transition-colors hover:bg-zinc-900/80">
+            <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-md border border-indigo-500/20 bg-indigo-500/10">
               <Sparkles className="h-6 w-6 text-indigo-400" />
             </div>
-            <h3 className="text-xl font-medium mb-3">Adaptive Learning</h3>
-            <p className="text-zinc-400 leading-relaxed">
-              Plans regenerate based on your feedback about difficulty, ensuring optimal challenge level throughout your prep.
+            <h3 className="mb-3 text-xl font-medium">Adaptive Learning</h3>
+            <p className="leading-relaxed text-zinc-400">
+              Plans regenerate based on your feedback about difficulty, keeping the roadmap
+              aligned with what you actually need next.
             </p>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-24 border-t border-zinc-900">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-semibold tracking-tight mb-4">How It Works</h2>
-          <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
-            Get started in minutes with our curated intake flow, then dive into your personalized study plan.
+      <section id="how-it-works" className="mx-auto max-w-7xl border-t border-zinc-900 px-6 py-24">
+        <div className="mb-16 text-center">
+          <h2 className="mb-4 text-3xl font-semibold tracking-tight">How It Works</h2>
+          <p className="mx-auto max-w-2xl text-lg text-zinc-400">
+            Get started in minutes with the intake flow, then work through a personalized
+            roadmap with grounded resource links.
           </p>
         </div>
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
           {[
             { step: "01", title: "Answer 5 Questions", desc: "Tell us about your level, goals, and constraints" },
             { step: "02", title: "Get Your Plan", desc: "Receive a personalized 2-4 week study roadmap" },
-            { step: "03", title: "Practice & Engage", desc: "Work through problems and engage with community" },
+            { step: "03", title: "Practice & Build", desc: "Work through tasks, links, and curated roadmap steps" },
             { step: "04", title: "Adapt & Improve", desc: "Regenerate plans based on your feedback" },
           ].map((item) => (
-            <div key={item.step} className="text-center p-6 rounded-lg border border-zinc-800/50 bg-zinc-900/20">
-              <div className="text-4xl font-mono font-bold text-indigo-500 mb-4">{item.step}</div>
-              <h3 className="text-lg font-medium mb-2">{item.title}</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
+            <div
+              key={item.step}
+              className="rounded-lg border border-zinc-800/50 bg-zinc-900/20 p-6 text-center"
+            >
+              <div className="mb-4 font-mono text-4xl font-bold text-indigo-500">{item.step}</div>
+              <h3 className="mb-2 text-lg font-medium">{item.title}</h3>
+              <p className="text-sm leading-relaxed text-zinc-400">{item.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Curated Roadmaps Section */}
-      <section id="curated-roadmaps" className="mx-auto max-w-7xl px-6 py-24 border-t border-zinc-900 bg-zinc-950/50">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-semibold tracking-tight mb-4">Explore Pre-Curated Roadmaps</h2>
-          <p className="text-zinc-400 max-w-2xl mx-auto text-lg mb-12">
-            Not ready to generate a personalized plan? Explore our expert-curated paths covering interview prep, project building, and networking.
+      <section
+        id="curated-roadmaps"
+        className="mx-auto max-w-7xl border-t border-zinc-900 bg-zinc-950/50 px-6 py-24"
+      >
+        <div className="mb-16 text-center">
+          <h2 className="mb-4 text-3xl font-semibold tracking-tight">Explore Pre-Curated Roadmaps</h2>
+          <p className="mx-auto mb-12 max-w-2xl text-lg text-zinc-400">
+            Not ready to generate a personalized plan? Explore expert-curated paths covering
+            interview prep, project building, and networking.
           </p>
           <div className="text-left">
             <CuratedRoadmapsDisplay />
@@ -176,19 +191,19 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="mx-auto max-w-7xl px-6 py-24 border-t border-zinc-900">
-        <div className="text-center max-w-2xl mx-auto bg-indigo-900/20 border border-indigo-500/20 rounded-2xl p-12 relative overflow-hidden">
-          <div className="absolute inset-0 bg-indigo-500/10 blur-3xl rounded-full" />
+      <section className="mx-auto max-w-7xl border-t border-zinc-900 px-6 py-24">
+        <div className="relative mx-auto max-w-2xl overflow-hidden rounded-2xl border border-indigo-500/20 bg-indigo-900/20 p-12 text-center">
+          <div className="absolute inset-0 rounded-full bg-indigo-500/10 blur-3xl" />
           <div className="relative z-10">
-            <h2 className="text-3xl font-semibold tracking-tight mb-4">Ready to ace your interviews?</h2>
-            <p className="text-lg text-indigo-200/70 mb-8 max-w-xl mx-auto">
-              Join thousands of developers who prep smarter, not harder. Start building your personalized path today.
+            <h2 className="mb-4 text-3xl font-semibold tracking-tight">Ready to ace your interviews?</h2>
+            <p className="mx-auto mb-8 max-w-xl text-lg text-indigo-200/70">
+              Start building a personalized path with grounded learning resources and an
+              editable roadmap.
             </p>
             <Button
               onClick={handleGetStarted}
               size="lg"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow-sm h-12 px-8 font-medium"
+              className="h-12 rounded-md bg-indigo-600 px-8 font-medium text-white shadow-sm hover:bg-indigo-700"
             >
               Start Your Free Plan
             </Button>
@@ -196,21 +211,22 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-zinc-900 bg-zinc-950">
         <div className="mx-auto max-w-7xl px-6 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="flex items-center gap-2 text-zinc-400">
               <Code2 className="h-5 w-5" />
-              <span className="font-mono font-semibold text-sm">Codify</span>
+              <span className="font-mono text-sm font-semibold">Codify</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-zinc-500">
-              <a href="#" className="hover:text-zinc-300 transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-zinc-300 transition-colors">Terms of Service</a>
+              <a href="#" className="transition-colors hover:text-zinc-300">
+                Privacy Policy
+              </a>
+              <a href="#" className="transition-colors hover:text-zinc-300">
+                Terms of Service
+              </a>
             </div>
-            <div className="text-sm text-zinc-500">
-              © {new Date().getFullYear()} Codify. All rights reserved.
-            </div>
+            <div className="text-sm text-zinc-500">© {new Date().getFullYear()} Codify. All rights reserved.</div>
           </div>
         </div>
       </footer>

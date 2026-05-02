@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-codify}
+      POSTGRES_USER: ${POSTGRES_USER:-codify}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codify}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./roadmap-platform/backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://codify:codify@postgres:5432/codify}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      CHROMA_PERSIST_DIR: ${CHROMA_PERSIST_DIR:-/app/chroma_db}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/app/chroma_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./roadmap-platform/frontend/codify
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://codify:codify@postgres:5432/codify}
+      BACKEND_API_URL: ${BACKEND_API_URL:-http://backend:8000}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID:-}
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET:-}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  chroma_data:

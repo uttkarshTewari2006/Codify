@@ -2,9 +2,17 @@ import { getToken } from "next-auth/jwt";
 import { SignJWT } from "jose";
 import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE = process.env.BACKEND_API_URL ?? "http://localhost:8000";
 const SHARED_AUTH_SECRET = process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET ?? "";
 const JWT_SECRET = new TextEncoder().encode(SHARED_AUTH_SECRET);
+
+function getBackendApiBase(): string {
+  const apiBase = process.env.BACKEND_API_URL?.trim();
+  if (!apiBase) {
+    throw new Error("BACKEND_API_URL must be configured for backend proxy requests.");
+  }
+
+  return apiBase.replace(/\/+$/, "");
+}
 
 /**
  * Proxy all browser-originated backend traffic through Next.js so the frontend
@@ -52,7 +60,19 @@ async function proxyWithAuth(
 ) {
   const { path } = await params;
   const pathStr = path.length ? path.join("/") : "";
-  const url = `${API_BASE}/${pathStr}${req?.nextUrl.search ?? ""}`;
+  let apiBase: string;
+
+  try {
+    apiBase = getBackendApiBase();
+  } catch (error) {
+    console.error("[Proxy] Configuration error:", error);
+    return new NextResponse(
+      JSON.stringify({ error: "BACKEND_API_URL is not configured" }),
+      { status: 500 }
+    );
+  }
+
+  const url = `${apiBase}/${pathStr}${req?.nextUrl.search ?? ""}`;
 
   const token = req
     ? await getToken({ req, secret: process.env.NEXTAUTH_SECRET })

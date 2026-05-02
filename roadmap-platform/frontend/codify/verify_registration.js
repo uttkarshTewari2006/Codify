@@ -1,4 +1,11 @@
 
+const appBaseUrl =
+  (process.env.FRONTEND_APP_URL || process.env.NEXTAUTH_URL || "").replace(/\/+$/, "");
+
+if (!appBaseUrl) {
+  throw new Error("Set FRONTEND_APP_URL or NEXTAUTH_URL before running verify_registration.js");
+}
+
 async function testRegistration() {
     const email = `test-${Date.now()}@example.com`;
     const password = "Password123!";
@@ -7,7 +14,7 @@ async function testRegistration() {
     console.log(`Attempting to register user: ${email}`);
 
     try {
-        const res = await fetch("http://localhost:3000/api/register", {
+        const res = await fetch(`${appBaseUrl}/api/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password, name }),
@@ -25,7 +32,7 @@ async function testRegistration() {
 
         // Try verifying duplicate
         console.log("Verifying duplicate registration prevention...");
-        const res2 = await fetch("http://localhost:3000/api/register", {
+        const res2 = await fetch(`${appBaseUrl}/api/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password, name }),
